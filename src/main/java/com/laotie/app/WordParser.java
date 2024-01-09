@@ -39,6 +39,11 @@ public class WordParser {
         }
     }
 
+    /**
+     * 过滤所有空标题
+     * @param root
+     * @return
+     */
     private static Section filterSection(Section root){
         if (null == root.getChildren()){
             return root;
@@ -50,6 +55,11 @@ public class WordParser {
         return root;
     }
 
+    /**
+     * 获得标题的层级
+     * @param heading
+     * @return
+     */
     private static int getHeadingIndent(String heading){
         if (heading.startsWith("heading")){
             return Integer.parseInt(heading.replace("heading", "").trim());
@@ -57,6 +67,13 @@ public class WordParser {
         return 0;
     }
 
+    /**
+     * 创建一个子节点
+     * @param type
+     * @param name
+     * @param children
+     * @return
+     */
     private static Section createSection(String type, String name, List<Section> children){
         Section paraSection = new Section();
         paraSection.setType(type);
@@ -65,6 +82,11 @@ public class WordParser {
         return paraSection;     
     }
 
+    /**
+     * 解析模板，获得标题和对应的输入框信息
+     * @param document
+     * @return
+     */
     private static Section parseDocument(XWPFDocument document) {
         Stack<Section> stack = new Stack<>();
         Section root = createSection("root", "root", new ArrayList<>());

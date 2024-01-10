@@ -1,19 +1,13 @@
 package com.laotie.app;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.xwpf.usermodel.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class WordParser {
     private XWPFDocument document;
@@ -142,106 +136,52 @@ public class WordParser {
 
     // 解析输入占位符
     private static List<Section> parseInput(String content) {
-        // 编译正则表达式
-        Pattern pattern = Pattern.compile("\\{([^}]+)\\}");
-        // 查找占位符
-        Matcher matcher = pattern.matcher(content);
         List<Section> result = new ArrayList<>();
-        while (matcher.find()) {
-            String match = matcher.group(0); // 获取第一个捕获组的内容
-            Section paraSection = new Section("input", match);
-            result.add(paraSection);
+
+        for (String json : extractJson(content)) {
+            try {
+                Section inputSection;
+                inputSection = Section.fromJson(json);
+                inputSection.setType("input");
+                result.add(inputSection);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
         }
+
         return result;
     }
 
-    private static class Section {
-        private String type;
-        private String prefix = "";
-        private String name;
-        private List<Section> children;
-
-        /**
-         * 创建一个子节点
-         * 
-         * @param type
-         * @param name
-         * @return
-         */
-        public Section(String type, String name) {
-            this.type = type;
-            this.name = name;
-            this.children = new ArrayList<>();
-        }
-
-        public String toJson() throws JsonProcessingException {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
-        }
-
-        public static Section fromJson(String jsonResult) throws JsonMappingException, JsonProcessingException {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(jsonResult, Section.class);
-        }
-
-        /**
-         * 获取非空的结构
-         * 
-         * @return
-         */
-        public Section toNoneEmpty() {
-            return filterSection(this);
-        }
-
-        /**
-         * 过滤所有空标题
-         * 
-         * @param root
-         * @return
-         */
-        private static Section filterSection(Section root) {
-            if (null == root.getChildren()) {
-                return root;
+    /**
+     * 提取json信息
+     * 
+     * @param content
+     * @return
+     */
+    private static List<String> extractJson(String mixedContent) {
+        List<String> result = new ArrayList<>();
+        Stack<Integer> stack = new Stack<>();
+        for (int i = 0; i < mixedContent.length(); i++) {
+            if (mixedContent.charAt(i) == '{') {
+                stack.push(i);
+            } else if (mixedContent.charAt(i) == '}') {
+                if (stack.isEmpty()) {
+                    // System.out.println("Invalid JSON string: unmatched closing bracket at
+                    // position " + i);
+                    continue;
+                }
+                int start = stack.pop();
+                String json = mixedContent.substring(start, i + 1);
+                if (stack.size() == 0) {
+                    result.add(json);
+                }
             }
-            for (Section child : root.getChildren()) {
-                filterSection(child);
-            }
-            root.setChildren(new ArrayList<>(CollectionUtils.select(root.getChildren(),
-                    child -> null != child && (child.getType() == "input" || child.getChildren().size() > 0))));
-            return root;
         }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public String getPrefix() {
-            return prefix;
-        }
-
-        public void setPrefix(String prefix) {
-            this.prefix = prefix;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public List<Section> getChildren() {
-            return children;
-        }
-
-        public void setChildren(List<Section> children) {
-            this.children = children;
-        }
-
+        // if (!stack.isEmpty()) {
+        // System.out.println("Invalid JSON string: unmatched opening bracket at
+        // position " + stack.pop());
+        // }
+        return result;
     }
+
 }

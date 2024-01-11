@@ -2,7 +2,9 @@ package com.laotie.app;
 
 import org.apache.poi.xwpf.usermodel.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,7 +22,7 @@ public class WordParser {
             WordParser wordParser = new WordParser(filePath);
             Section root = wordParser.parseTemplate();
 
-            String jsonResult = root.toNoneEmpty().toJson();
+            String jsonResult = root.toNoneEmpty().toJson(true);
             System.out.println(jsonResult);
 
             Section rootBack = Section.fromJson(jsonResult);
@@ -139,14 +141,15 @@ public class WordParser {
         List<Section> result = new ArrayList<>();
 
         for (String json : extractJson(content)) {
-            try {
-                Section inputSection;
-                inputSection = Section.fromJson(json);
-                inputSection.setType("input");
-                result.add(inputSection);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
+            JSONObject jsonObj = JSON.parseObject(json);
+            if( null == jsonObj.get("var_name")){
+                continue;
             }
+
+            Section inputSection = new Section("input", (String)jsonObj.get("name"));
+            inputSection.setInputAttr(jsonObj);
+            inputSection.setInputReplace(json);
+            result.add(inputSection);
         }
 
         return result;

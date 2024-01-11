@@ -2,11 +2,7 @@ package com.laotie.app;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 public class JsonExtract {
     // public static void main(String[] args) throws Exception {
     //     String text = "Some text before {\"key1\":\"value1\",\"key2\":{\"nested\":\"nested\"}} some text in between {\"key2\":\"value2\"} some text after.";

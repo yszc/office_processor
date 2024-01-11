@@ -5,15 +5,20 @@ import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONWriter;
 
+import lombok.Data;
+
+@Data
 class Section {
     private String type;
     private String prefix = "";
     private String name;
     private List<Section> children;
+    private JSONObject inputAttr;
+    private String inputReplace;
 
     /**
      * 创建一个子节点
@@ -32,14 +37,19 @@ class Section {
 
     }
 
-    public String toJson() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+    public String toJson()  {
+        return JSON.toJSONString(this);
     }
 
-    public static Section fromJson(String jsonResult) throws JsonMappingException, JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(jsonResult, Section.class);
+    public String toJson(Boolean pretty){
+        if (pretty){
+            return JSON.toJSONString(this, JSONWriter.Feature.PrettyFormat);
+        }
+        return this.toJson();
+    }
+
+    public static Section fromJson(String jsonResult) {
+        return JSON.parseObject(jsonResult, Section.class);
     }
 
     /**
@@ -67,38 +77,6 @@ class Section {
         root.setChildren(new ArrayList<>(CollectionUtils.select(root.getChildren(),
                 child -> null != child && (child.getType() == "input" || child.getChildren().size() > 0))));
         return root;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<Section> getChildren() {
-        return children;
-    }
-
-    public void setChildren(List<Section> children) {
-        this.children = children;
     }
 
 }

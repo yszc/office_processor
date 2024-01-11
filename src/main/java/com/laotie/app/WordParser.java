@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Stack;
 
 public class WordParser {
-    private XWPFDocument document;
-    private XWPFStyles style_sheet;
-    private Section nestedRoot;
+    protected XWPFDocument document;
+    protected XWPFStyles style_sheet;
+    protected Section nestedRoot;
 
     public static void main(String[] args) {
         String filePath = "/workspaces/wordparser/docs/template.docx";
@@ -24,6 +24,7 @@ public class WordParser {
 
             String jsonResult = root.toNoneEmpty().toJson(true);
             System.out.println(jsonResult);
+            System.out.println(JSON.toJSONString(root.fetchAllInputAttr()));
 
             Section rootBack = Section.fromJson(jsonResult);
             System.out.println(rootBack);
@@ -38,6 +39,7 @@ public class WordParser {
             // 样式表
             this.style_sheet = document.getStyles();
             this.nestedRoot = new Section("root", "root");
+            fis.close();
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -136,19 +138,22 @@ public class WordParser {
         return 0;
     }
 
-    // 解析输入占位符
+    /**
+     * 解析输入占位符
+     * @param content
+     * @return
+     */
     private static List<Section> parseInput(String content) {
         List<Section> result = new ArrayList<>();
 
         for (String json : extractJson(content)) {
             JSONObject jsonObj = JSON.parseObject(json);
-            if( null == jsonObj.get("var_name")){
+            if( null == jsonObj.get("var_name") ){
                 continue;
             }
 
             Section inputSection = new Section("input", (String)jsonObj.get("name"));
             inputSection.setInputAttr(jsonObj);
-            inputSection.setInputReplace(json);
             result.add(inputSection);
         }
 
@@ -161,10 +166,16 @@ public class WordParser {
      * @param content
      * @return
      */
-    private static List<String> extractJson(String mixedContent) {
+    protected static List<String> extractJson(String mixedContent) {
         List<String> result = new ArrayList<>();
         Stack<Integer> stack = new Stack<>();
+        Boolean slash = false; 
         for (int i = 0; i < mixedContent.length(); i++) {
+            if (slash){
+                //忽略所有的转义字符
+                slash = false;
+                continue;
+            }
             if (mixedContent.charAt(i) == '{') {
                 stack.push(i);
             } else if (mixedContent.charAt(i) == '}') {
@@ -178,6 +189,8 @@ public class WordParser {
                 if (stack.size() == 0) {
                     result.add(json);
                 }
+            } else if (mixedContent.charAt(i) == '\\') {
+                slash = true;
             }
         }
         // if (!stack.isEmpty()) {

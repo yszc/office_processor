@@ -22,12 +22,12 @@ public class WordParser {
             WordParser wordParser = new WordParser(filePath);
             Section root = wordParser.parseTemplate();
 
-            String jsonResult = root.toNoneEmpty().toJson(true);
+            String jsonResult = root.toNoneEmpty().toJson();
             System.out.println(jsonResult);
-            System.out.println(JSON.toJSONString(root.fetchAllInputAttr()));
+            // System.out.println(JSON.toJSONString(root.fetchAllInputAttr()));
 
-            Section rootBack = Section.fromJson(jsonResult);
-            System.out.println(rootBack);
+            // Section rootBack = Section.fromJson(jsonResult);
+            // System.out.println(rootBack);
         } catch (Exception e) {
 
         }
@@ -140,6 +140,7 @@ public class WordParser {
 
     /**
      * 解析输入占位符
+     * 
      * @param content
      * @return
      */
@@ -148,11 +149,11 @@ public class WordParser {
 
         for (String json : extractJson(content)) {
             JSONObject jsonObj = JSON.parseObject(json);
-            if( null == jsonObj.get("var_name") ){
+            if (null == jsonObj.get("var_name")) {
                 continue;
             }
 
-            Section inputSection = new Section("input", (String)jsonObj.get("name"));
+            Section inputSection = new Section("input", (String) jsonObj.get("name"));
             inputSection.setInputAttr(jsonObj);
             result.add(inputSection);
         }
@@ -169,10 +170,10 @@ public class WordParser {
     protected static List<String> extractJson(String mixedContent) {
         List<String> result = new ArrayList<>();
         Stack<Integer> stack = new Stack<>();
-        Boolean slash = false; 
+        Boolean slash = false;
         for (int i = 0; i < mixedContent.length(); i++) {
-            if (slash){
-                //忽略所有的转义字符
+            if (slash) {
+                // 忽略所有的转义字符
                 slash = false;
                 continue;
             }

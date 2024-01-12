@@ -1,7 +1,5 @@
 package com.laotie.app;
 
-import static com.laotie.app.WordParser.parseInput;
-
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,22 +12,56 @@ import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
 public class WordWriter extends WordParser {
+    private JSONObject inputContent;
 
-    public WordWriter(String filePath) throws IOException {
+    public WordWriter(String filePath, JSONObject inputContent) throws IOException {
         super(filePath);
+        this.inputContent = inputContent;
     }
 
     /**
      * 设置段落内容
      * TODO: check if changed
+     * 
      * @param paragraph
      * @param content
      * @return
      */
-    private XWPFParagraph setParagraphContent(XWPFParagraph paragraph, String content) {
+    private XWPFParagraph updateParagraph(XWPFParagraph paragraph) {
+        // step 1 get all replacement
+        // 1.1 parse the var_name and type
+        // 1.2 replace to each type
+        // step 2 update paragraph
+        String content = paragraph.getText();
+        for (String json : extractJson(content)) {
+            JSONObject inputObj = JSON.parseObject(json);
+            if (null == inputObj.get("var_name") || null == inputObj.get("type")) {
+                continue;
+            }
+            String inputType = inputObj.getString("type");
+            switch (inputType) {
+                case "text":
+                case "radio":
+                    JSONObject userInput = inputContent.getJSONObject(inputObj.getString("var_name"));
+                    content = content.replace(json, userInput.getString("content"));
+                    break;
+                case "WYSIWYG":
+                    break;
+                case "table":
+                    break;
+                default:
+                    break;
+            }
+
+            // TODO: content replace
+            // Object inputInfo = jsonObj.get(inputObj.get("var_name"));
+            // content = content.replace(json, inputInfo.toString());
+        }
+
         int len = paragraph.getRuns().size();
         // 清除原段落中的内容块，只保留第0个
         for (int i = len - 1; i >= 1; i--) {
@@ -44,22 +76,11 @@ public class WordWriter extends WordParser {
         return paragraph;
     }
 
-    public void writeTemplate(String jsonString, String saveFile) throws IOException {
-        JSONObject jsonObj = JSON.parseObject(jsonString);
+    public void writeTemplate(String saveFile) throws IOException {
         for (IBodyElement element : document.getBodyElements()) {
             if (element instanceof XWPFParagraph) {
                 XWPFParagraph paragraph = (XWPFParagraph) element;
-                String content = paragraph.getText();
-                for (String json : extractJson(content)) {
-                    JSONObject inputObj = JSON.parseObject(json);
-                    if (null == inputObj.get("var_name")) {
-                        continue;
-                    }
-                    // TODO: content replace
-                    // Object inputInfo = jsonObj.get(inputObj.get("var_name"));
-                    // content = content.replace(json, inputInfo.toString());
-                }
-                paragraph = setParagraphContent(paragraph, content);
+                updateParagraph(paragraph);
             } else if (element instanceof XWPFTable) {
                 XWPFTable table = (XWPFTable) element;
                 for (XWPFTableRow row : table.getRows()) {
@@ -88,7 +109,7 @@ public class WordWriter extends WordParser {
             document.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

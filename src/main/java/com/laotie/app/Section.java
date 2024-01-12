@@ -32,25 +32,27 @@ class Section {
         this.children = new ArrayList<>();
     }
 
-    public Section(){
+    public Section() {
 
     }
 
     /**
      * json 序列化
+     * 
      * @return
      */
-    public String toJson()  {
+    public String toJson() {
         return JSON.toJSONString(this);
     }
 
     /**
      * json序列化
+     * 
      * @param pretty
      * @return
      */
-    public String toJson(Boolean pretty){
-        if (pretty){
+    public String toJson(Boolean pretty) {
+        if (pretty) {
             return JSON.toJSONString(this, JSONWriter.Feature.PrettyFormat);
         }
         return this.toJson();
@@ -58,6 +60,7 @@ class Section {
 
     /**
      * 通过json字符串构建
+     * 
      * @param jsonResult
      * @return
      */
@@ -76,25 +79,27 @@ class Section {
 
     /**
      * 获得所有的输入模块
+     * 
      * @return
      */
-    public List<JSONObject> fetchAllInputAttr(){
+    public List<JSONObject> fetchAllInputAttr() {
         return _fetchAllInputAttr(this);
     }
 
     /**
      * 递归获得节点的输入模块
+     * 
      * @param root
      * @return
      */
-    private static List<JSONObject> _fetchAllInputAttr(Section root){
+    private static List<JSONObject> _fetchAllInputAttr(Section root) {
         List<JSONObject> result = new ArrayList<>();
 
-        for(Section child: root.getChildren()){
-            if(child.getType() == "title"){
+        for (Section child : root.getChildren()) {
+            if (child.getType() == "title") {
                 List<JSONObject> childInput = _fetchAllInputAttr(child);
                 result.addAll(childInput);
-            }else if (child.getType() == "input" && null != child.getInputAttr()){
+            } else if (child.getType() == "input" && null != child.getInputAttr()) {
                 result.add(child.getInputAttr());
             }
         }

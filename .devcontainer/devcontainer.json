@@ -10,8 +10,7 @@
 			"version": "none",
 			"installMaven": "true",
 			"installGradle": "false"
-		},
-		"ghcr.io/devcontainers-contrib/features/curl-apt-get:1": {}
+		}
 	}
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

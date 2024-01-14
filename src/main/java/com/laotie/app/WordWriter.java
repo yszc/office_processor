@@ -16,6 +16,7 @@ import org.apache.xmlbeans.XmlCursor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Safelist;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -133,6 +134,7 @@ public class WordWriter extends WordParser {
         List<Element> tags = dom.select("div").first().children();
         // 因为每次都插入这 cursor 前面的位置，因此倒序输出的结果才是顺序
         Collections.reverse(tags);
+        // HtmlContent = Jsoup.clean(HtmlContent, (new Safelist()).addTags("p","img"));
         for (Element child : tags) {
             // 处理 <p> 元素
             XmlCursor cursor = currPara.getCTP().newCursor();

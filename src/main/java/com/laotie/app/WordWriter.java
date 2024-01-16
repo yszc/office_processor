@@ -28,7 +28,11 @@ public class WordWriter extends WordParser {
     private JSONObject formValues;
 
     public static void main(String[] args) {
-        String formData = "{\"ent_name\":\"fongwell\",\"ent_code\":\"9160000xxx\",\"farenxingming\":\"laotie\",\"if_crime\":\"是\",\"3_1_dengjizhutigaishu\":\"<div><p>这是第一段</p><p>这是第二段</p><img src=\\\\\\\"image/img.jpg\\\\\\\"/><p>这是第三段</p></div>\\\"\",\"z_table\":{\"columns\":[[\"aaaaa\",\"111111\",\"10\"],[\"bbbbb\",\"222222\",\"20\"],[\"ccccc\",\"333333\",\"30\"]],\"rows\":[[\"合计\",\"60\"]]}}";
+        String formData = "{\"ent_name\":\"fongwell\",\"ent_code\":\"9160000xxx\",\"farenxingming\":\"laotie\",\"if_crime\":\"是\",\"3_1_dengjizhutigaishu\":\"<p><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /></p>\\n"
+                + //
+                "<p>test</p>\\n" + //
+                "<p>test2</p>\\n" + //
+                "<p>test31</p>\",\"z_table\":{\"columns\":[[\"aaaaa\",\"111111\",\"10\"],[\"bbbbb\",\"222222\",\"20\"],[\"ccccc\",\"333333\",\"30\"]]}}";
         try {
             WordWriter writer = new WordWriter("docs/template.docx", JSON.parseObject(formData));
             writer.writeTemplate("docs/output.docx");
@@ -157,28 +161,44 @@ public class WordWriter extends WordParser {
      */
     private int _writeWYSIWYParagraphs(String HtmlContent, XWPFParagraph currPara) {
         // 使用 Jsoup 解析 HTML
+        HtmlContent = Jsoup.clean(HtmlContent, (new Safelist()).addTags("p", "img"));
         Document dom = Jsoup.parse(HtmlContent);
         // 遍历所有子元素
         int offset = 0;
-        List<Element> tags = dom.select("div").first().children();
+        List<Element> tags = dom.select("p");
         // 因为每次都插入这 cursor 前面的位置，因此倒序输出的结果才是顺序
         Collections.reverse(tags);
-        // HtmlContent = Jsoup.clean(HtmlContent, (new Safelist()).addTags("p","img"));
-        for (Element child : tags) {
-            // 处理 <p> 元素
+        for (Element ptag : tags) {
             XmlCursor cursor = currPara.getCTP().newCursor();
-            if (child.tagName().equals("p")) {
-                String text = child.text();
-                if (text.trim().length() == 0) {
-                    continue;
+            XWPFParagraph newPara = document.insertNewParagraph(cursor);
+            for (Element pcontent : ptag.children()) {
+                if (pcontent.tagName().equals("img")) {
+                    // String text = ptag.text();
+                    int width = Integer.valueOf(pcontent.attr("width"));
+                    int height = Integer.valueOf(pcontent.attr("height"));
+                    if(width==0 || height==0){
+                        continue;
+                    }
+                    String src = pcontent.attr("src");
+
+                    String base64Image = "your_base64_image_string";
+                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                    r.setText("Text before image");
+                    r.addBreak();
+                    r.addPicture(bis, XWPFDocument.PICTURE_TYPE_JPEG, "image.jpg", Units.toEMU(200), Units.toEMU(200)); // 200x200 pixels
+                    r.addBreak();
+                    r.setText("Text after image");
+                } else {
+                    String text = pcontent.text();
+                    if (text.trim().length() == 0) {
+                        continue;
+                    }
+                    newPara.createRun().setText(text.trim());
                 }
-                XWPFParagraph newPara = document.insertNewParagraph(cursor);
-                newPara.createRun().setText(text.trim());
-                currPara = newPara;
-                offset++;
-            } else if (child.tagName().equals("img")) {
-                // 处理 <img> 元素
             }
+            currPara = newPara;
+            offset++;
         }
         return offset;
     }

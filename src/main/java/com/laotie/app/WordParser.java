@@ -17,7 +17,7 @@ public class WordParser {
     protected Section nestedRoot;
 
     public static void main(String[] args) {
-        String filePath = "/workspaces/wordparser/docs/template.docx";
+        String filePath = "docs/template.docx";
         try {
             WordParser wordParser = new WordParser(filePath);
             Section root = wordParser.parseTemplate();

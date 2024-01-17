@@ -20,7 +20,7 @@
     docker
     插件：Dev Containers
 
-用vscode打开项目，如果插件正常运行会提示 Reopen in contanier。如果没有提示也可以Ctrl+Shift+P，输入 open folder in container， 选择项目文件夹即可。
+用vscode打开项目，如果插件正常运行会提示 Reopen in contanier。如果没有提示也可以Ctrl+Shift+P，搜索 open folder in container， 选择项目文件夹即可。
 
 # 后记
 

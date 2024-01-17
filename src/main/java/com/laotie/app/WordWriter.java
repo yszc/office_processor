@@ -1,17 +1,17 @@
 package com.laotie.app;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.poi.common.usermodel.PictureType;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -24,7 +24,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STMerge;
 
@@ -36,7 +35,7 @@ public class WordWriter extends WordParser {
     private JSONObject formValues;
 
     public static void main(String[] args) {
-        String formData = "{\"ent_name\":\"fongwell\",\"ent_code\":\"9160000xxx\",\"farenxingming\":\"laotie\",\"if_crime\":\"是\",\"3_1_dengjizhutigaishu\":\"<p>text before</p><p><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /></p>\\n"
+        String formData = "{\"ent_name\":\"fongwell\",\"ent_code\":\"9160000xxx\",\"farenxingming\":\"laotie\",\"if_crime\":\"是\",\"3_1_dengjizhutigaishu\":\"<p>This is a paragraph with first line indentation.This is a paragraph with first line indentation.This is a paragraph with first line indentation.This is a paragraph with first line indentation.</p><p><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /></p>\\n"
                 + //
                 "<p>test</p>\\n" + //
                 "<p>test2</p>\\n" + //
@@ -168,28 +167,34 @@ public class WordWriter extends WordParser {
      * @return
      */
     private int _writeWYSIWYParagraphs(String HtmlContent, XWPFParagraph currPara) {
-        // 使用 Jsoup 解析 HTML
+        // 使用 Jsoup 解析 HTML，只保留<p><img>标签
         HtmlContent = Jsoup.clean(HtmlContent,
                 Safelist.none().addTags("p", "img").addAttributes("img", "alt", "height", "src", "width"));
-        // Cleaner.clean(HtmlContent);
         Document dom = Jsoup.parse(HtmlContent);
         // 遍历所有子元素
         int offset = 0;
         List<Element> tags = dom.select("p");
-        // 因为每次都插入这 cursor 前面的位置，因此倒序输出的结果才是顺序
+        // 因为获得的 cursor 在段落前面的位置，并且没有找到获得段落后面的方法，因此倒序插入就是顺序
         Collections.reverse(tags);
         for (Element ptag : tags) {
             XmlCursor cursor = currPara.getCTP().newCursor();
             XWPFParagraph newPara = document.insertNewParagraph(cursor);
             for (Node childNode : ptag.childNodes()) {
                 if (childNode instanceof TextNode) {
+                    // 段落中的文本
                     TextNode textNode = (TextNode) childNode;
                     String text = textNode.text();
                     if (text.trim().length() == 0) {
                         continue;
                     }
-                    newPara.createRun().setText(text.trim());
+                    XWPFRun r = newPara.createRun();
+                    // 设置文本字体和首行缩进
+                    r.setText(text.trim());
+                    r.setFontFamily("宋体");
+                    r.setFontSize(12);
+                    newPara.setFirstLineIndent(600);
                 } else if (childNode instanceof Element) {
+                    // 段落中的图片
                     Element pcontent = (Element) childNode;
                     if (!pcontent.tagName().equals("img")) {
                         continue;
@@ -211,8 +216,9 @@ public class WordWriter extends WordParser {
                     byte[] imageBytes = Base64.getDecoder().decode(base64Image);
                     ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
                     try {
-                        r.addPicture(bis, _getPictureType(photoType), "image." + photoType, Units.toEMU(width),
-                                Units.toEMU(height));
+                        r.addPicture(bis, _getPictureType(photoType), "image." + photoType,
+                                Units.toEMU(width), Units.toEMU(height));
+                        newPara.setAlignment(ParagraphAlignment.CENTER);
                     } catch (InvalidFormatException | IOException e) {
                         e.printStackTrace();
                     }
@@ -225,6 +231,11 @@ public class WordWriter extends WordParser {
         return offset;
     }
 
+    /**
+     * 获得word中的图片类型编码
+     * @param typename
+     * @return
+     */
     private int _getPictureType(String typename) {
         switch (typename) {
             case "png":
@@ -241,6 +252,13 @@ public class WordWriter extends WordParser {
         }
     }
 
+    /**
+     * 插入一个新的表格
+     * @param inputObj
+     * @param tableData
+     * @param currPara
+     * @return
+     */
     private int _writeNewTable(JSONObject inputObj, JSONObject tableData, XWPFParagraph currPara) {
         XmlCursor cursor = currPara.getCTP().newCursor();
         XWPFTable newTable = document.insertNewTbl(cursor);
@@ -302,17 +320,17 @@ public class WordWriter extends WordParser {
         return 1;
     }
 
+    /**
+     * 向模板中填充数据
+     * @param saveFile
+     * @throws IOException
+     */
     public void writeTemplate(String saveFile) throws IOException {
         for (int n = 0; n < document.getBodyElements().size(); n++) {
             IBodyElement element = document.getBodyElements().get(n);
-            // for (IBodyElement element : document.getBodyElements()) {
             if (element instanceof XWPFParagraph) {
                 XWPFParagraph paragraph = (XWPFParagraph) element;
-                try {
-                    n += _writeParagraph(paragraph);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                n += _writeParagraph(paragraph);
             } else if (element instanceof XWPFTable) {
                 XWPFTable table = (XWPFTable) element;
                 for (XWPFTableRow row : table.getRows()) {
@@ -325,16 +343,10 @@ public class WordWriter extends WordParser {
             }
         }
         FileOutputStream out;
-        try {
-            out = new FileOutputStream(saveFile);
-            document.write(out);
-            out.close();
-            document.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        out = new FileOutputStream(saveFile);
+        document.write(out);
+        out.close();
+        document.close();
     }
 
 }

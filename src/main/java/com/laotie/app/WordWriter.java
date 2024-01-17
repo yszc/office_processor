@@ -287,7 +287,7 @@ public class WordWriter extends WordParser {
             }
         }
 
-        JSONArray footer = inputObj.getJSONObject("input_des").getJSONArray("rows");
+        JSONArray footer = inputObj.getJSONObject("input_des").getJSONArray("footer");
         currRow = newTable.createRow();
         int mergedSize = 0;
         for (int i = 0; i < footer.size(); i++) {

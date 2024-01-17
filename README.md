@@ -15,7 +15,7 @@
 # 模板规范
 
 ## 模板占位符
-模板占位符是一串json，应以单行格式插入在word模板文件中，用以下json编辑器进行格式化校验并压缩为单行：
+模板占位符是一串json，应以单行格式插入在word模板文件中，用以下json编辑器进行**格式化校验并压缩为单行**：
 
 http://www.esjson.com/
 
@@ -94,20 +94,6 @@ http://www.esjson.com/
         "placeholder": "填写正确的企业名称",
         "input_type": "text",
         "validation": [
-          {
-            "type": "required",
-            "msg": "企业名称必填"
-          },
-          {
-            "type": "regexp",
-            "regexp": ".{1,50}",
-            "msg": "企业名称为1-50个字符"
-          },
-          {
-            "type": "regexp",
-            "regexp": "[a-zA-Z]*",
-            "msg": "企业名称只能由英文字母自称"
-          }
         ]
       },
       {
@@ -122,15 +108,6 @@ http://www.esjson.com/
         "placeholder": "请填写比例数据",
         "input_type": "text",
         "validation": [
-          {
-            "type": "required",
-            "msg": "占比必填"
-          },
-          {
-            "type": "regexp",
-            "regexp": "[0-9]*",
-            "msg": "只能填写数字"
-          }
         ]
       }
     ],

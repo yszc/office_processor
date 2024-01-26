@@ -3,9 +3,15 @@ package com.laotie.app;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
@@ -34,11 +40,13 @@ public class WordWriter extends WordParser {
     private JSONObject formValues;
 
     public static void main(String[] args) {
-        String formData = "{\"ent_name\":\"fongwell\",\"ent_code\":\"9160000xxx\",\"farenxingming\":\"laotie\",\"if_crime\":\"是\",\"3_1_dengjizhutigaishu\":\"<p>This is a paragraph with first line indentation.This is a paragraph with first line indentation.This is a paragraph with first line indentation.This is a paragraph with first line indentation.</p><p><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /></p>\\n"
+        String formData = "{\n" + //
+                "\t\t\"ent_name\": \"jes\",\n" + //
+                "\t\t\"ent_code\": \"jes\",\n" + //
+                "\t\t\"3_3_xinyong\": \"<p><img src=\\\"http://192.168.50.103:9000/fsp-server-dev/2024/01/23/1_20240123141158A181.png\\\" /><img src=\\\"http://192.168.50.103:9000/fsp-server-dev/2024/01/23/2_20240123141158A182.png\\\" /><img src=\\\"http://192.168.50.103:9000/fsp-server-dev/2024/01/23/3_20240123141158A183.png\\\" /><img src=\\\"http://192.168.50.103:9000/fsp-server-dev/2024/01/23/4_20240123141158A184.png\\\" /><img src=\\\"http://192.168.50.103:9000/fsp-server-dev/2024/01/23/5_20240123141158A185.png\\\" /><img src=\\\"http://192.168.50.103:9000/fsp-server-dev/2024/01/23/6_20240123141158A186.png\\\" /><img src=\\\"http://192.168.50.103:9000/fsp-server-dev/2024/01/23/7_20240123141159A187.png\\\" /></p>\"\n"
                 + //
-                "<p>test</p>\\n" + //
-                "<p>test2</p>\\n" + //
-                "<p>test31</p>\",\"z_table\":{\"columns\":[[\"aaaaa\",\"111111\",\"10\"],[\"bbbbb\",\"222222\",\"20\"],[\"ccccc\",\"333333\",\"30\"]]}}";
+                "\t}";
+
         try {
             WordWriter writer = new WordWriter("docs/template.docx", JSON.parseObject(formData));
             writer.writeTemplate("docs/output.docx");
@@ -65,7 +73,39 @@ public class WordWriter extends WordParser {
         int offset = 0;
         Boolean changed = false;
 
-        if (jsons.size() >= 1) {
+        Set<String> inputTypes = _getInputTypes(jsons);
+        if(inputTypes.contains("table")||inputTypes.contains("WYSIWYG")){
+            // whole replace
+            int paraIndex = document.getBodyElements().indexOf(paragraph);
+            int _offset = 0;
+
+            JSONObject inputObj = JSON.parseObject(jsons.get(0));
+            if (null == inputObj.get("var_name") || null == inputObj.get("input_type")) {
+                return offset;
+            }
+            String inputType = inputObj.getString("input_type");
+
+            switch (inputType) {
+                case "WYSIWYG":
+                    String textInput = formValues.getString(inputObj.getString("var_name"));
+                    if (null != textInput) {
+                        _offset = _writeWYSIWYParagraphs(textInput, paragraph);
+                        offset += _offset;
+                    }
+                    document.removeBodyElement(paraIndex + _offset);
+                    offset--;
+                    break;
+                case "table":
+                    JSONObject tableData = formValues.getJSONObject(inputObj.getString("var_name"));
+                    if (null != tableData) {
+                        _offset = _writeNewTable(inputObj, tableData, paragraph);
+                        offset += _offset;
+                    }
+                    document.removeBodyElement(paraIndex + _offset);
+                    offset--;
+                    break;
+            }
+        }else{
             // inline replace
             String replacedContent = _writeSimpleText(content);
             if (!replacedContent.equalsIgnoreCase(content)) {
@@ -85,46 +125,21 @@ public class WordWriter extends WordParser {
                 run.setText(replacedContent, 0);
                 return offset;
             }
-        }
-        if (jsons.size() == 1) {
-            // whole replace
-            int paraIndex = document.getBodyElements().indexOf(paragraph);
 
-            JSONObject inputObj = JSON.parseObject(jsons.get(0));
-            if (null == inputObj.get("var_name") || null == inputObj.get("input_type")) {
-                return offset;
-            }
-            String inputType = inputObj.getString("input_type");
-
-            switch (inputType) {
-                case "WYSIWYG":
-                    String textInput = formValues.getString(inputObj.getString("var_name"));
-                    if (null != textInput) {
-                        int _offset = _writeWYSIWYParagraphs(textInput, paragraph);
-                        if (_offset > 0) {
-                            changed = true;
-                            document.removeBodyElement(paraIndex + _offset);
-                            offset--;
-                        }
-                        offset += _offset;
-                    }
-                    break;
-                case "table":
-                    JSONObject tableData = formValues.getJSONObject(inputObj.getString("var_name"));
-                    if (null != tableData) {
-                        int _offset = _writeNewTable(inputObj, tableData, paragraph);
-                        if (_offset > 0) {
-                            changed = true;
-                            document.removeBodyElement(paraIndex + _offset);
-                            offset--;
-                        }
-                        offset += _offset;
-                    }
-                    break;
-            }
         }
 
         return offset;
+    }
+
+    private Set<String> _getInputTypes(List<String> jsons){
+        Set<String> inputTypes = new HashSet<>();
+        for (String json: jsons){
+            JSONObject inputObj = JSON.parseObject(json);
+            if (null != inputObj.get("input_type")) {
+                inputTypes.add(inputObj.getString("input_type"));
+            }
+        }
+        return inputTypes;
     }
 
     /**
@@ -134,11 +149,25 @@ public class WordWriter extends WordParser {
      * @return
      */
     private String _writeSimpleText(String content) {
+        return _writeSimpleText(content, true);
+    }
+
+    /**
+     * 替换简单文本
+     *
+     * @param content
+     * @param pure  是否过滤掉未填充的占位符
+     * @return
+     */
+    private String _writeSimpleText(String content, Boolean pure) {
         // Boolean changed = false;
         List<String> jsons = extractJson(content);
         for (String json : jsons) {
             JSONObject inputObj = JSON.parseObject(json);
             if (null == inputObj.get("var_name") || null == inputObj.get("input_type")) {
+                if(pure){
+                    content = content.replace(json, "");
+                }
                 continue;
             }
             String inputType = inputObj.getString("input_type");
@@ -153,6 +182,9 @@ public class WordWriter extends WordParser {
                     break;
                 default:
                     break;
+            }
+            if(pure){
+                content = content.replace(json, "");
             }
         }
         return content;
@@ -198,23 +230,16 @@ public class WordWriter extends WordParser {
                     if (!pcontent.tagName().equals("img")) {
                         continue;
                     }
-                    int width = Integer.valueOf(pcontent.attr("width"));
-                    int height = Integer.valueOf(pcontent.attr("height"));
-                    if (width == 0 || height == 0) {
-                        continue;
-                    }
-                    String src = pcontent.attr("src");
-                    String[] photoData = src.split(";base64,", 2);
-                    if (photoData.length <= 1) {
-                        continue;
-                    }
-                    String base64Image = photoData[1];
-                    String photoType = photoData[0].replace("data:image/", "");
+                    int width = Integer.valueOf("0" + pcontent.attr("width"));
+                    int height = Integer.valueOf("0" + pcontent.attr("height"));
+                    width = width == 0 ? 300 : width;
+                    height = height == 0 ? 300 : height;
 
                     XWPFRun r = newPara.createRun();
-                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
                     try {
+                        String src = pcontent.attr("src");
+                        String photoType = _getImageType(src);
+                        InputStream bis = _getImageByteStream(src);
                         r.addPicture(bis, _getPictureType(photoType), "image." + photoType,
                                 Units.toEMU(width), Units.toEMU(height));
                         newPara.setAlignment(ParagraphAlignment.CENTER);
@@ -230,8 +255,52 @@ public class WordWriter extends WordParser {
         return offset;
     }
 
+    private String _getImageType(String src) throws IOException {
+        String defaultType = "png";
+        if (src.indexOf("http", 0) == 0) {
+            URL url = new URL(src);
+            URLConnection connection = url.openConnection();
+            String contentType = connection.getContentType();
+            if (contentType.indexOf("image/") == 0) {
+                return contentType.replace("image/", "");
+            }
+            return "png";
+        } else {
+            String[] photoData = src.split(";base64,", 2);
+            if (photoData.length > 1 && photoData[0].indexOf("data:image/") == 0) {
+                return photoData[0].replace("data:image/", "");
+            }
+        }
+        return defaultType;
+    }
+
+    private InputStream _getImageByteStream(String src) throws MalformedURLException, IOException {
+        if (src.indexOf("http", 0) == 0) {
+            return _getRemoteImageByteStream(src);
+        } else {
+            return _getBase64ImageByteStream(src);
+        }
+    }
+
+    private InputStream _getBase64ImageByteStream(String src) {
+        String[] photoData = src.split(";base64,", 2);
+        if (photoData.length <= 1) {
+            return null;
+        }
+        String base64Image = photoData[1];
+
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+        ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+        return bis;
+    }
+
+    private InputStream _getRemoteImageByteStream(String src) throws MalformedURLException, IOException {
+        return new URL(src).openStream();
+    }
+
     /**
      * 获得word中的图片类型编码
+     * 
      * @param typename
      * @return
      */
@@ -253,6 +322,7 @@ public class WordWriter extends WordParser {
 
     /**
      * 插入一个新的表格
+     * 
      * @param inputObj
      * @param tableData
      * @param currPara
@@ -321,6 +391,7 @@ public class WordWriter extends WordParser {
 
     /**
      * 向模板中填充数据
+     * 
      * @param saveFile
      * @throws IOException
      */

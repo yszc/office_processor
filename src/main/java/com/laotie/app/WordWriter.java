@@ -255,6 +255,12 @@ public class WordWriter extends WordParser {
         return offset;
     }
 
+    /**
+     * 获得图片的类型
+     * @param src
+     * @return
+     * @throws IOException
+     */
     private String _getImageType(String src) throws IOException {
         String defaultType = "png";
         if (src.indexOf("http", 0) == 0) {
@@ -274,6 +280,13 @@ public class WordWriter extends WordParser {
         return defaultType;
     }
 
+    /**
+     * 根据img标签的src属性，获取图片字节流
+     * @param src
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     private InputStream _getImageByteStream(String src) throws MalformedURLException, IOException {
         if (src.indexOf("http", 0) == 0) {
             return _getRemoteImageByteStream(src);
@@ -282,6 +295,11 @@ public class WordWriter extends WordParser {
         }
     }
 
+    /**
+     * 根据base64获取图片字节流
+     * @param src
+     * @return
+     */
     private InputStream _getBase64ImageByteStream(String src) {
         String[] photoData = src.split(";base64,", 2);
         if (photoData.length <= 1) {
@@ -294,6 +312,13 @@ public class WordWriter extends WordParser {
         return bis;
     }
 
+    /**
+     * 根据URL获取图片字节流
+     * @param src
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     private InputStream _getRemoteImageByteStream(String src) throws MalformedURLException, IOException {
         return new URL(src).openStream();
     }

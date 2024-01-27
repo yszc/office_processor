@@ -17,12 +17,12 @@ public class WordParser {
     protected Section nestedRoot;
 
     public static void main(String[] args) {
-        String filePath = "docs/template.docx";
+        String filePath = "docs/template_complete_v3.docx";
         try {
             WordParser wordParser = new WordParser(filePath);
             Section root = wordParser.parseTemplate();
 
-            String jsonResult = root.toNoneEmpty().toJson();
+            String jsonResult = root.toFormFriendly().toNoneEmpty().toJson();
             System.out.println(jsonResult);
             // System.out.println(JSON.toJSONString(root.fetchAllInputAttr()));
 
@@ -54,7 +54,8 @@ public class WordParser {
      */
     public Section parseTemplate() {
         Stack<Section> stack = new Stack<>();
-        stack.push(nestedRoot);
+        this.nestedRoot = new Section("root", "root");
+        stack.push(this.nestedRoot);
 
         for (IBodyElement element : document.getBodyElements()) {
             if (element instanceof XWPFParagraph) {
@@ -112,9 +113,11 @@ public class WordParser {
             String parentPrefix = stack.peek().getPrefix();
             List<Section> brothers = stack.peek().getChildren();
             if (parentPrefix.length() > 0) {
-                paraSection.setPrefix(parentPrefix + "." + brothers.size());
+                paraSection.setPrefix(parentPrefix + "."
+                        + String.valueOf( brothers.stream().filter(section -> "title".equals(section.getType())).count()));
             } else {
-                paraSection.setPrefix(String.valueOf(brothers.size()));
+                paraSection.setPrefix(
+                        String.valueOf(brothers.stream().filter(section -> "title".equals(section.getType())).count()));
             }
             stack.push(paraSection);
         } else {

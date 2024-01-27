@@ -78,8 +78,12 @@ class Section {
         return filterSection(this);
     }
 
+    /**
+     * 前端表单友好化适配，将不在title下的输入框放在附件封面
+     * @return
+     */
     public Section toFormFriendly(){
-        Section generalInfo = new Section("title", "基本信息");
+        Section generalInfo = new Section("title", "附件封面");
         List<Integer> indexForDel = new ArrayList<>();
         for (int i=0; i<this.children.size(); i++){
             Section child = this.children.get(i);

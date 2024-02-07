@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
@@ -72,7 +73,6 @@ public class WordWriter extends WordParser {
         String content = paragraph.getText();
         List<String> jsons = extractJson(content);
         int offset = 0;
-        Boolean changed = false;
         if (jsons.isEmpty()) {
             return offset;
         }
@@ -181,7 +181,7 @@ public class WordWriter extends WordParser {
                     case "radio":
                     case "date":
                         replacement = formValues.getString(varName);
-                        if (!replacement.isEmpty()) {
+                        if (!StringUtils.isEmpty(replacement)) {
                             replacement = "$$" + replacement + "$$";
                         }
                         break;
@@ -189,10 +189,10 @@ public class WordWriter extends WordParser {
                         break;
                 }
             }
-            if (!pure && replacement.isEmpty()) {
+            if (!pure && StringUtils.isEmpty(replacement)) {
                 replacement = json;
             }
-            if (replacement.isEmpty()) {
+            if (StringUtils.isEmpty(replacement)) {
                 replacement = "$$         $$";
             }
             contentRuns.add(replacement);
@@ -514,7 +514,8 @@ public class WordWriter extends WordParser {
                     int colspan = footerCell.getIntValue("colspan");
                     if (colspan > 1) {
                         currRow.getCell(currCellIndex).getCTTc().addNewTcPr().addNewHMerge().setVal(STMerge.RESTART);
-                        currRow.getCell(currCellIndex + colspan - 1).getCTTc().addNewTcPr().addNewHMerge().setVal(STMerge.CONTINUE);
+                        currRow.getCell(currCellIndex + colspan - 1).getCTTc().addNewTcPr().addNewHMerge()
+                                .setVal(STMerge.CONTINUE);
                         mergedSize += colspan - 1;
                     }
                     break;

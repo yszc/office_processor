@@ -115,7 +115,7 @@ public class WordWriter extends WordParser {
             }
             // 获取字体
             String fontFamily = paragraph.getRuns().get(0).getFontFamily();
-            int fontSize = paragraph.getRuns().get(0).getFontSize();
+            Double fontSize = paragraph.getRuns().get(0).getFontSizeAsDouble()
             for (int i = 0; i < replacedContent.size(); i++) {
                 // 设置新内容
                 XWPFRun run = null;

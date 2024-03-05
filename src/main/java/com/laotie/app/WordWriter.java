@@ -27,6 +27,7 @@ import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import org.apache.poi.xwpf.usermodel.XWPFTable.XWPFBorderType;
 import org.apache.xmlbeans.XmlCursor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -48,8 +49,54 @@ public class WordWriter extends WordParser {
 
     public static void main(String[] args) {
         String formData = "{\n" + //
-                "  \"0_ent_name\": \"广州芳禾数据有限公司\",\n" + //
-                "}";
+                        "    \"0_ent_name\": \"海鳗数据\",\n" + //
+                        "    \"4_3_xzhjzsycjsm\": \"\",\n" + //
+                        "    \"4_4_1_xjsxfsjs\": \"\",\n" + //
+                        "    \"4_4_2_sjclfsjs\": \"\",\n" + //
+                        "    \"4_5_jfnrsm\": \"\",\n" + //
+                        "    \"5_1_text\": \"\",\n" + //
+                        "    \"5_2_1_text\": \"\",\n" + //
+                        "    \"5_2_2_1_text\": \"\",\n" + //
+                        "    \"5_2_2_2_text\": \"\",\n" + //
+                        "    \"5_3_text\": \"\",\n" + //
+                        "    \"5_4_text\": \"\",\n" + //
+                        "    \"6_1_1_text\": \"\",\n" + //
+                        "    \"6_1_2_text\": \"\",\n" + //
+                        "    \"6_2_1_text\": \"\",\n" + //
+                        "    \"6_2_2_text\": \"\",\n" + //
+                        "    \"6_3_1_1_text\": \"\",\n" + //
+                        "    \"6_3_1_2_text\": \"\",\n" + //
+                        "    \"6_3_2_text\": \"\",\n" + //
+                        "    \"6_3_3_text\": \"\",\n" + //
+                        "    \"6_3_4_text\": \"\",\n" + //
+                        "    \"6_3_5_text\": \"\",\n" + //
+                        "    \"2_3_table1\": [\n" + //
+                        "      [\n" + //
+                        "        \"t\",\n" + //
+                        "        \"t\",\n" + //
+                        "        \"12\"\n" + //
+                        "      ]\n" + //
+                        "    ],\n" + //
+                        "    \"2_3_table2\": [\n" + //
+                        "      [\n" + //
+                        "        \"1\",\n" + //
+                        "        \"2\",\n" + //
+                        "        \"12\"\n" + //
+                        "      ]\n" + //
+                        "    ],\n" + //
+                        "    \"2_3_table3\": [\n" + //
+                        "      [\n" + //
+                        "        \"t1-1\",\n" + //
+                        "        \"t1-2\",\n" + //
+                        "        \"13\"\n" + //
+                        "      ],\n" + //
+                        "      [\n" + //
+                        "        \"t2-1\",\n" + //
+                        "        \"t2-2\",\n" + //
+                        "        \"23\"\n" + //
+                        "      ]\n" + //
+                        "    ]\n" + //
+                        "  }";
         try {
             WordWriter writer = new WordWriter("docs/template.docx", JSON.parseObject(formData));
             writer.writeTemplate("docs/output.docx");
@@ -460,6 +507,12 @@ public class WordWriter extends WordParser {
     private int _writeNewTable(JSONObject inputObj, JSONArray tableData, XWPFParagraph currPara) {
         XmlCursor cursor = currPara.getCTP().newCursor();
         XWPFTable newTable = document.insertNewTbl(cursor);
+        newTable.setTopBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setBottomBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setLeftBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setRightBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setInsideHBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setInsideVBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
 
         // 设置表格的宽度为页面的全宽
         CTTblPr tblPr = newTable.getCTTbl().getTblPr();

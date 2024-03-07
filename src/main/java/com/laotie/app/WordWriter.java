@@ -81,7 +81,7 @@ public class WordWriter extends WordParser {
                         "      [\n" + //
                         "        \"1\",\n" + //
                         "        \"2\",\n" + //
-                        "        \"12\"\n" + //
+                        "        \"12.6h\"\n" + //
                         "      ]\n" + //
                         "    ],\n" + //
                         "    \"2_3_table3\": [\n" + //
@@ -573,14 +573,19 @@ public class WordWriter extends WordParser {
                     }
                     break;
                 case "sum":
-                    double sum = 0;
-                    for (int j = 0; j < tableData.size(); j++) {
-                        sum += tableData.getJSONArray(j).getDouble(i + mergedSize);
-                    }
-                    if (sum == (long) sum) {
-                        currCell.setText(String.format("%d", (long) sum));
-                    } else {
-                        currCell.setText(String.format("%s", sum));
+                    try{
+                        double sum = 0;
+                        for (int j = 0; j < tableData.size(); j++) {
+                            sum += Double.parseDouble(tableData.getJSONArray(j).getString(i + mergedSize));
+                        }
+                        if (sum == (long) sum) {
+                            //如果结果是整数则部显示小数点
+                            currCell.setText(String.format("%d", (long) sum));
+                        } else {
+                            currCell.setText(String.format("%s", sum));
+                        }
+                    }catch(Exception e){
+                        currCell.setText("#N/A");
                     }
                     break;
                 default:

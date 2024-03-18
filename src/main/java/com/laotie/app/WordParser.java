@@ -3,6 +3,7 @@ package com.laotie.app;
 import org.apache.poi.xwpf.usermodel.*;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 
 import java.io.FileInputStream;
@@ -16,8 +17,8 @@ public class WordParser {
     protected XWPFStyles style_sheet;
     protected Section nestedRoot;
 
-    public static void main(String[] args) {
-        String filePath = "docs/template_complete_v3.docx";
+    public static void main(String[] args) throws Exception {
+        String filePath = "docs/jsoncase.docx";
         try {
             WordParser wordParser = new WordParser(filePath);
             Section root = wordParser.parseTemplate();
@@ -29,7 +30,8 @@ public class WordParser {
             // Section rootBack = Section.fromJson(jsonResult);
             // System.out.println(rootBack);
         } catch (Exception e) {
-
+            throw e;
+            // System.out.println(e.getMessage());
         }
     }
 
@@ -149,16 +151,20 @@ public class WordParser {
      */
     private static List<Section> parseInput(String content) {
         List<Section> result = new ArrayList<>();
+        
+        try{
+            for (String json : extractJson(content)) {
+                JSONObject jsonObj = JSON.parseObject(json);
+                if (null == jsonObj.get("var_name")) {
+                    continue;
+                }
 
-        for (String json : extractJson(content)) {
-            JSONObject jsonObj = JSON.parseObject(json);
-            if (null == jsonObj.get("var_name")) {
-                continue;
+                Section inputSection = new Section("input", (String) jsonObj.get("name"));
+                inputSection.setInputAttr(jsonObj);
+                result.add(inputSection);
             }
-
-            Section inputSection = new Section("input", (String) jsonObj.get("name"));
-            inputSection.setInputAttr(jsonObj);
-            result.add(inputSection);
+        } catch (JSONException e){
+            // ignore exceptions
         }
 
         return result;

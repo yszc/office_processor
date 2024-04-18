@@ -10,8 +10,7 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>wordparser</name>
-  <!-- FIXME change it to the project's website -->
-  <description>aliyun-oss-spring-boot-starter</description>
+  <description>word parser</description>
   <url>https://github.com/yszc/office_processor</url>
 
   <licenses>
@@ -153,7 +152,7 @@
           <version>0.4.0</version>
           <extensions>true</extensions>
           <configuration>
-            <publishingServerId>masiyi</publishingServerId>
+            <publishingServerId>gpg-laotie</publishingServerId>
             <tokenAuth>true</tokenAuth>
           </configuration>
         </plugin>

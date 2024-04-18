@@ -2,6 +2,7 @@ package com.laotie.app;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -75,6 +76,25 @@ class Section {
      */
     public Section toNoneEmpty() {
         return filterSection(this);
+    }
+
+    /**
+     * 前端表单友好化适配，将不在title下的输入框放在附件封面
+     * @return
+     */
+    public Section toFormFriendly(){
+        Section generalInfo = new Section("title", "附件封面");
+        List<Integer> indexForDel = new ArrayList<>();
+        for (int i=0; i<this.children.size(); i++){
+            Section child = this.children.get(i);
+            if ("input".equals(child.getType()) ){
+                generalInfo.children.add(child);
+                indexForDel.add(i);
+            }
+        }
+        this.children.add(0, generalInfo);
+        this.children = this.children.stream().filter(section -> "title".equals(section.getType())).collect(Collectors.toList());
+        return this;
     }
 
     /**

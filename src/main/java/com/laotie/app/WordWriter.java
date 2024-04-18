@@ -3,20 +3,26 @@ package com.laotie.app;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.*;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
+import org.apache.poi.xwpf.usermodel.UnderlinePatterns;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import org.apache.poi.xwpf.usermodel.XWPFTable.XWPFBorderType;
 import org.apache.xmlbeans.XmlCursor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,7 +30,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.safety.Safelist;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STMerge;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -33,20 +42,6 @@ import com.alibaba.fastjson2.JSONObject;
 public class WordWriter extends WordParser {
     private JSONObject formValues;
 
-    public static void main(String[] args) {
-        String formData = "{\"ent_name\":\"fongwell\",\"ent_code\":\"9160000xxx\",\"farenxingming\":\"laotie\",\"if_crime\":\"是\",\"3_1_dengjizhutigaishu\":\"<p>This is a paragraph with first line indentation.This is a paragraph with first line indentation.This is a paragraph with first line indentation.This is a paragraph with first line indentation.</p><p><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbdJREFUSEvtlTFoU1EUhr//JdXBTh3ddHWqICIIoi0U8qI4KLiJi3RSJ4cm6lOTCk7q1E3cBAuKJpFCqyAOiqCDuOrmZqc6SPPeL4l5pTTGl7SNIHjXe8/57vn/c88VQ14acn7WAEk5dAsmJ4dUff5mu8D/FsBRuNerzGmkeUbRwnJbkVSKfiRy6/xMcVyztfcbJXR0Yreb8WtgD2YpqNYnBwbE5cIdoWkFCnWjtpRCHE2NuZl/BewDfqzf77sClwvXjKJO0hXJk7rZeOvo9Kib31+ADgCxCE6p8uxJCu8L4FLhgqW7naAECIBl2VNGtxFHAcucU7X+YL18mQCXwrMW99t+mZfCly0tAGNACkP2RVUb9zZ680eAy8dPmmQeyIHfKb/rmKJHK75SOGhrERj9ZaQjVRrXf/d2egJ8tTjhxHVgJ/BJ8Y4juvX425qxnX3juVylcanXw+wJSErhImIC+KJ87rCip1+7WnOmuJ/Z2gdBewoMVkGr9VbzDzXCtKL6582OjkyTN5t4oDbdCuR/BZnqdUuEzuP4Y2ZkxoH00+oCbDVxGh9U6u3cfw+wXTfvOeyGBfgJ4tMNKLPgx7sAAAAASUVORK5CYII=\\\" alt=\\\"\\\" width=\\\"141\\\" height=\\\"141\\\" /></p>\\n"
-                + //
-                "<p>test</p>\\n" + //
-                "<p>test2</p>\\n" + //
-                "<p>test31</p>\",\"z_table\":{\"columns\":[[\"aaaaa\",\"111111\",\"10\"],[\"bbbbb\",\"222222\",\"20\"],[\"ccccc\",\"333333\",\"30\"]]}}";
-        try {
-            WordWriter writer = new WordWriter("docs/template.docx", JSON.parseObject(formData));
-            writer.writeTemplate("docs/output.docx");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public WordWriter(String templatePath, JSONObject inputContent) throws IOException {
         super(templatePath);
         this.formValues = inputContent;
@@ -54,41 +49,22 @@ public class WordWriter extends WordParser {
 
     /**
      * 写段落内容
-     * 
+     *
      * @param paragraph
-     * @param content
      * @return
      */
     private int _writeParagraph(XWPFParagraph paragraph) {
         String content = paragraph.getText();
         List<String> jsons = extractJson(content);
         int offset = 0;
-        Boolean changed = false;
-
-        if (jsons.size() >= 1) {
-            // inline replace
-            String replacedContent = _writeSimpleText(content);
-            if (!replacedContent.equalsIgnoreCase(content)) {
-                changed = true;
-            }
-            if (changed) {
-                int len = paragraph.getRuns().size();
-                // 清除原段落中的内容块，只保留第0个
-                for (int i = len - 1; i >= 1; i--) {
-                    try {
-                        paragraph.removeRun(i);
-                    } catch (Exception e) {
-                    }
-                }
-                // 设置新内容
-                XWPFRun run = paragraph.getRuns().get(0);
-                run.setText(replacedContent, 0);
-                return offset;
-            }
+        if (jsons.isEmpty()) {
+            return offset;
         }
-        if (jsons.size() == 1) {
+        Set<String> inputTypes = _getInputTypes(jsons);
+        if (inputTypes.contains("table") || inputTypes.contains("WYSIWYG")||inputTypes.contains("checkbox")) {
             // whole replace
             int paraIndex = document.getBodyElements().indexOf(paragraph);
+            int _offset = 0;
 
             JSONObject inputObj = JSON.parseObject(jsons.get(0));
             if (null == inputObj.get("var_name") || null == inputObj.get("input_type")) {
@@ -100,51 +76,159 @@ public class WordWriter extends WordParser {
                 case "WYSIWYG":
                     String textInput = formValues.getString(inputObj.getString("var_name"));
                     if (null != textInput) {
-                        int _offset = _writeWYSIWYParagraphs(textInput, paragraph);
-                        if (_offset > 0) {
-                            changed = true;
-                            document.removeBodyElement(paraIndex + _offset);
-                            offset--;
-                        }
+                        _offset = _writeWYSIWYParagraphs(textInput, paragraph);
                         offset += _offset;
                     }
+                    document.removeBodyElement(paraIndex + _offset);
+                    offset--;
                     break;
                 case "table":
-                    JSONObject tableData = formValues.getJSONObject(inputObj.getString("var_name"));
-                    if (null != tableData) {
-                        int _offset = _writeNewTable(inputObj, tableData, paragraph);
-                        if (_offset > 0) {
-                            changed = true;
-                            document.removeBodyElement(paraIndex + _offset);
-                            offset--;
-                        }
-                        offset += _offset;
-                    }
+                    JSONArray tableData = formValues.getJSONArray(inputObj.getString("var_name"));
+                    _offset = _writeNewTable(inputObj, tableData, paragraph);
+                    offset += _offset;
+                    document.removeBodyElement(paraIndex + _offset);
+                    offset--;
                     break;
+                case "checkbox":
+                    JSONArray checked = formValues.getJSONArray(inputObj.getString("var_name"));
+                    _offset = _writeCheckbox(inputObj, checked, paragraph);
+                    offset += _offset;
+                    document.removeBodyElement(paraIndex + _offset);
+                    offset--;
+                    break;
+                    
             }
+        } else {
+            // inline replace
+            List<String> replacedContent = _writeSimpleTextAndMarkUnderline(content, true);
+            // 清除原段落中的内容块，只保留第0个以保持样式
+            while (paragraph.getRuns().size() > 1) {
+                paragraph.removeRun(1);
+            }
+            // 获取字体
+            String fontFamily = _getFontFamily(paragraph);
+            Double fontSize = _getFontSize(paragraph);
+            for (int i = 0; i < replacedContent.size(); i++) {
+                // 设置新内容
+                XWPFRun run = null;
+                if (i < paragraph.getRuns().size()) {
+                    run = paragraph.getRuns().get(i);
+                } else {
+                    run = paragraph.createRun();
+                    run.setFontFamily(fontFamily);
+                    run.setFontSize(fontSize);
+                }
+                String runContent = replacedContent.get(i);
+                if (runContent.length() > 4 && runContent.substring(0, 2).equals("$$")
+                        && runContent.substring(runContent.length() - 2).equals("$$")) {
+                    runContent = runContent.substring(2, runContent.length() - 2);
+                    run.setUnderline(UnderlinePatterns.SINGLE);
+                }
+                run.setText(runContent, 0);
+            }
+            return offset;
         }
 
         return offset;
     }
 
     /**
-     * 替换简单文本
+     * 获得所有占位符类型
      * 
+     * @param jsons
+     * @return
+     */
+    private Set<String> _getInputTypes(List<String> jsons) {
+        Set<String> inputTypes = new HashSet<>();
+        for (String json : jsons) {
+            JSONObject inputObj = JSON.parseObject(json);
+            if (null != inputObj.get("input_type")) {
+                inputTypes.add(inputObj.getString("input_type"));
+            }
+        }
+        return inputTypes;
+    }
+
+    /**
+     * 替换简单文本，并标记下划线
+     * 
+     * @param content
+     * @param pure
+     * @return
+     */
+    private List<String> _writeSimpleTextAndMarkUnderline(String content, Boolean pure) {
+        // Boolean changed = false;
+        List<String> jsons = extractJson(content);
+        List<String> contentRuns = new ArrayList<>();
+        for (String json : jsons) {
+            String[] splited = content.split(Pattern.quote(json), 2);
+            contentRuns.add(splited[0]);
+            JSONObject inputObj = JSON.parseObject(json);
+            String replacement = "";
+            String inputType = inputObj.getString("input_type");
+            String varName = inputObj.getString("var_name");
+            if (null != varName && null != inputType) {
+                switch (inputType) {
+                    case "text":
+                    case "radio":
+                    case "date":
+                        replacement = formValues.getString(varName);
+                        if (!StringUtils.isEmpty(replacement)) {
+                            replacement = "$$" + replacement + "$$";
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (!pure && StringUtils.isEmpty(replacement)) {
+                replacement = json;
+            }
+            if (StringUtils.isEmpty(replacement)) {
+                replacement = "$$         $$";
+            }
+            contentRuns.add(replacement);
+            content = splited[1];
+        }
+        if (!content.trim().isEmpty()) {
+            contentRuns.add(content);
+        }
+        return contentRuns;
+    }
+
+    /**
+     * 替换简单文本
+     *
      * @param content
      * @return
      */
     private String _writeSimpleText(String content) {
+        return _writeSimpleText(content, true);
+    }
+
+    /**
+     * 替换简单文本
+     *
+     * @param content
+     * @param pure    是否过滤掉未填充的占位符
+     * @return
+     */
+    private String _writeSimpleText(String content, Boolean pure) {
         // Boolean changed = false;
         List<String> jsons = extractJson(content);
         for (String json : jsons) {
             JSONObject inputObj = JSON.parseObject(json);
             if (null == inputObj.get("var_name") || null == inputObj.get("input_type")) {
+                if (pure) {
+                    content = content.replace(json, "");
+                }
                 continue;
             }
             String inputType = inputObj.getString("input_type");
             switch (inputType) {
                 case "text":
                 case "radio":
+                case "date":
                     String textInput = formValues.getString(inputObj.getString("var_name"));
                     if (null != textInput) {
                         content = content.replace(json, textInput);
@@ -154,13 +238,42 @@ public class WordWriter extends WordParser {
                 default:
                     break;
             }
+            if (pure) {
+                content = content.replace(json, "");
+            }
         }
         return content;
     }
 
     /**
+     * 获得段落字体
+     */
+    private String _getFontFamily(XWPFParagraph currPara){
+        try{
+            String fontFamily = currPara.getRuns().get(0).getFontFamily();
+            if (!Objects.isNull(fontFamily)){
+                return fontFamily;
+            }
+        }catch(Exception e){}
+        return "宋体";
+    }
+
+    /**
+     * 获得段落字体大小
+     */
+    private Double _getFontSize(XWPFParagraph currPara){
+        try{
+            Double fontSizeAsDouble = currPara.getRuns().get(0).getFontSizeAsDouble();
+            if (!Objects.isNull(fontSizeAsDouble)){
+                return fontSizeAsDouble;
+            }
+        }catch(Exception e){}
+        return 13.0;
+    }
+
+    /**
      * 写富文本结果，需要转为多行图文混合形式
-     * 
+     *
      * @param HtmlContent
      * @param currPara
      * @return
@@ -172,58 +285,16 @@ public class WordWriter extends WordParser {
         Document dom = Jsoup.parse(HtmlContent);
         // 遍历所有子元素
         int offset = 0;
-        List<Element> tags = dom.select("p");
+        List<Element> tags = dom.select("p,img");
         // 因为获得的 cursor 在段落前面的位置，并且没有找到获得段落后面的方法，因此倒序插入就是顺序
         Collections.reverse(tags);
-        for (Element ptag : tags) {
+        String fontFamily = _getFontFamily(currPara);
+        Double fontSize = _getFontSize(currPara);
+        for (Element tagElm : tags) {
             XmlCursor cursor = currPara.getCTP().newCursor();
             XWPFParagraph newPara = document.insertNewParagraph(cursor);
-            for (Node childNode : ptag.childNodes()) {
-                if (childNode instanceof TextNode) {
-                    // 段落中的文本
-                    TextNode textNode = (TextNode) childNode;
-                    String text = textNode.text();
-                    if (text.trim().length() == 0) {
-                        continue;
-                    }
-                    XWPFRun r = newPara.createRun();
-                    // 设置文本字体和首行缩进
-                    r.setText(text.trim());
-                    r.setFontFamily("宋体");
-                    r.setFontSize(12);
-                    newPara.setFirstLineIndent(600);
-                } else if (childNode instanceof Element) {
-                    // 段落中的图片
-                    Element pcontent = (Element) childNode;
-                    if (!pcontent.tagName().equals("img")) {
-                        continue;
-                    }
-                    int width = Integer.valueOf(pcontent.attr("width"));
-                    int height = Integer.valueOf(pcontent.attr("height"));
-                    if (width == 0 || height == 0) {
-                        continue;
-                    }
-                    String src = pcontent.attr("src");
-                    String[] photoData = src.split(";base64,", 2);
-                    if (photoData.length <= 1) {
-                        continue;
-                    }
-                    String base64Image = photoData[1];
-                    String photoType = photoData[0].replace("data:image/", "");
-
-                    XWPFRun r = newPara.createRun();
-                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
-                    try {
-                        r.addPicture(bis, _getPictureType(photoType), "image." + photoType,
-                                Units.toEMU(width), Units.toEMU(height));
-                        newPara.setAlignment(ParagraphAlignment.CENTER);
-                    } catch (InvalidFormatException | IOException e) {
-                        e.printStackTrace();
-                    }
-                    r.addBreak();
-                }
-            }
+            _writePTag(tagElm, newPara, fontFamily, fontSize);
+            _writeImageTag(tagElm, newPara);
             currPara = newPara;
             offset++;
         }
@@ -231,7 +302,180 @@ public class WordWriter extends WordParser {
     }
 
     /**
+     * 跟进 p 标签，插入多行图文混合形式
+     *
+     * @param tagElm
+     * @param newPara
+     * @return
+     */
+    private void _writePTag(Element tagElm, XWPFParagraph newPara, String fontFamily, Double fontSize) {
+        if (!tagElm.tagName().equals("p")) {
+            return;
+        }
+        for (Node childNode : tagElm.childNodes()) {
+            if (childNode instanceof TextNode) {
+                // 段落中的文本
+                TextNode textNode = (TextNode) childNode;
+                String text = textNode.text();
+                if (text.trim().length() == 0) {
+                    continue;
+                }
+                XWPFRun r = newPara.createRun();
+                // 设置文本字体和首行缩进
+                r.setText(text.trim());
+                r.setFontFamily(fontFamily);
+                r.setFontSize(fontSize);
+                newPara.setFirstLineIndent(600);
+            } else if (childNode instanceof Element) {
+                // 段落中的标签
+                Element pcontent = (Element) childNode;
+                _writePTag(pcontent, newPara, fontFamily, fontSize);
+                _writeImageTag(pcontent, newPara);
+            }
+        }
+    }
+
+    /**
+     * 根据 img 标签在段落中插入图片
+     *
+     * @param tagElm
+     * @param newPara
+     * @return
+     */
+    private void _writeImageTag(Element tagElm, XWPFParagraph newPara){
+        if (!tagElm.tagName().equals("img")) {
+            return;
+        }
+        try {
+            int width = Integer.valueOf("0" + tagElm.attr("width"));
+            int height = Integer.valueOf("0" + tagElm.attr("height"));
+            width = width == 0 ? 300 : width;
+            height = height == 0 ? 300 : height;
+
+            int[] adapted = _getImageZoom(width, height, 400, 600);
+            width = adapted[0];
+            height = adapted[1];
+
+            XWPFRun r = newPara.createRun();
+            String src = tagElm.attr("src");
+            String photoType = _getImageType(src);
+            InputStream bis = _getImageByteStream(src);
+            r.addPicture(bis, _getPictureType(photoType), "image." + photoType,
+                    Units.toEMU(width), Units.toEMU(height));
+            newPara.setAlignment(ParagraphAlignment.CENTER);
+            r.addBreak();
+        } catch (InvalidFormatException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取图片缩放适配的宽高
+     * 
+     * @param originalWidth  原宽度
+     * @param originalHeight 原高度
+     * @param maxWidth       最大宽度
+     * @param maxHeight      最大高度
+     * @return 宽高
+     */
+    private static int[] _getImageZoom(int originalWidth, int originalHeight, int maxWidth, int maxHeight) {
+        int adaptedWidth = originalWidth;
+        int adaptedHeight = originalHeight;
+
+        // 如果图片的宽大于最大宽度或高大于最大高度，则需要适配
+        if (originalWidth > maxWidth || originalHeight > maxHeight) {
+            // 计算宽高比例
+            double aspectRatio = (double) originalWidth / originalHeight;
+
+            // 根据最大宽度适配，然后计算相应的高度
+            adaptedWidth = maxWidth;
+            adaptedHeight = (int) (adaptedWidth / aspectRatio);
+
+            // 如果适配后的高度超过最大高度，则使用最大高度适配，然后计算相应的宽度
+            if (adaptedHeight > maxHeight) {
+                adaptedHeight = maxHeight;
+                adaptedWidth = (int) (adaptedHeight * aspectRatio);
+            }
+        }
+
+        return new int[] { adaptedWidth, adaptedHeight };
+    }
+
+    /**
+     * 获得图片的类型
+     * 
+     * @param src
+     * @return
+     * @throws IOException
+     */
+    private String _getImageType(String src) throws IOException {
+        String defaultType = "png";
+        if (src.indexOf("http", 0) == 0) {
+            URL url = new URL(src);
+            URLConnection connection = url.openConnection();
+            String contentType = connection.getContentType();
+            if (contentType.indexOf("image/") == 0) {
+                return contentType.replace("image/", "");
+            }
+            return "png";
+        } else {
+            String[] photoData = src.split(";base64,", 2);
+            if (photoData.length > 1 && photoData[0].indexOf("data:image/") == 0) {
+                return photoData[0].replace("data:image/", "");
+            }
+        }
+        return defaultType;
+    }
+
+    /**
+     * 根据img标签的src属性，获取图片字节流
+     * 
+     * @param src
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
+    private InputStream _getImageByteStream(String src) throws MalformedURLException, IOException {
+        if (src.indexOf("http", 0) == 0) {
+            return _getRemoteImageByteStream(src);
+        } else {
+            return _getBase64ImageByteStream(src);
+        }
+    }
+
+    /**
+     * 根据base64获取图片字节流
+     * 
+     * @param src
+     * @return
+     */
+    private InputStream _getBase64ImageByteStream(String src) {
+        String[] photoData = src.split(";base64,", 2);
+        if (photoData.length <= 1) {
+            return null;
+        }
+        String base64Image = photoData[1];
+
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+        ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+        return bis;
+    }
+
+    /**
+     * 根据URL获取图片字节流
+     * 
+     * @param src
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
+    private InputStream _getRemoteImageByteStream(String src) throws MalformedURLException, IOException {
+        return new URL(src).openStream();
+    }
+
+    /**
      * 获得word中的图片类型编码
+     * 
      * @param typename
      * @return
      */
@@ -250,81 +494,179 @@ public class WordWriter extends WordParser {
                 return XWPFDocument.PICTURE_TYPE_PNG;
         }
     }
+    /**
+     * 插入多选项
+     * @param currPara
+     * @return
+     */
+    private int _writeCheckbox(JSONObject inputObj, JSONArray checked, XWPFParagraph currPara) {
+        int offset = 0;
+        if (checked == null){
+            checked = new JSONArray();
+        }
+        String fontFamily = _getFontFamily(currPara);
+        Double fontSize = _getFontSize(currPara);
+        JSONArray allTheOptions = inputObj.getJSONObject("input_des").getJSONArray("options");
+        // write each option single line, and if it checked then write it as checked
+        for (int i = 0; i < allTheOptions.size(); i++) {
+            XmlCursor cursor = currPara.getCTP().newCursor();
+            XWPFParagraph newPara = document.insertNewParagraph(cursor);
+            offset++;
+            newPara.setFirstLineIndent(currPara.getFirstLineIndent());
+
+            JSONObject option = allTheOptions.getJSONObject(i);
+            String optionText = option.getString("value");
+            boolean isChecked = checked.contains(option.getString("value"));
+            // checkbox symbol in Wingdings 2 font
+            String checkedText = isChecked ? "\u0052" : "\u00a3";
+            XWPFRun rSymbol = newPara.createRun();
+            rSymbol.setText(checkedText);
+            rSymbol.setFontFamily("Wingdings 2");
+            rSymbol.setFontSize(currPara.getRuns().get(0).getFontSizeAsDouble());
+            String text = " " + optionText;
+            XWPFRun r = newPara.createRun();
+            r.setText(text);
+            r.setFontFamily(fontFamily);
+            r.setFontSize(fontSize);
+        }
+        return offset;
+    }
+
+
 
     /**
      * 插入一个新的表格
+     * 
      * @param inputObj
      * @param tableData
      * @param currPara
      * @return
      */
-    private int _writeNewTable(JSONObject inputObj, JSONObject tableData, XWPFParagraph currPara) {
+    private int _writeNewTable(JSONObject inputObj, JSONArray tableData, XWPFParagraph currPara) {
+        String fontFamily = _getFontFamily(currPara);
+        Double fontSize = _getFontSize(currPara);
         XmlCursor cursor = currPara.getCTP().newCursor();
         XWPFTable newTable = document.insertNewTbl(cursor);
+        newTable.setTopBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setBottomBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setLeftBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setRightBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setInsideHBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
+        newTable.setInsideVBorder(XWPFBorderType.SINGLE , 5, 0, "000000");
 
-        // 使用 FastJSON 解析 JSON 数组
-        JSONArray dataByColumns = tableData.getJSONArray("columns");
-        if (null == dataByColumns || dataByColumns.size() == 0) {
-            return 0;
+        // 设置表格的宽度为页面的全宽
+        CTTblPr tblPr = newTable.getCTTbl().getTblPr();
+        if (tblPr == null) {
+            tblPr = newTable.getCTTbl().addNewTblPr();
         }
+        CTTblWidth tblWidth = tblPr.isSetTblW() ? tblPr.getTblW() : tblPr.addNewTblW();
+        tblWidth.setW(5000);
+        tblWidth.setType(STTblWidth.PCT);
 
+        // 写表头
         JSONArray header = inputObj.getJSONObject("input_des").getJSONArray("columns");
         XWPFTableRow currRow = newTable.getRow(0);
-        currRow.getCell(0).setText(header.getJSONObject(0).getString("name"));
-        for (int i = 1; i < header.size(); i++) {
-            currRow.createCell().setText(header.getJSONObject(i).getString("name"));
+        for (int i = 0; i < header.size(); i++) {
+            XWPFTableCell cell = null != currRow.getCell(i) ? currRow.getCell(i) : currRow.createCell();
+            cell.setText(header.getJSONObject(i).getString("name"));
+            XWPFRun r = cell.getParagraphs().get(0).getRuns().get(0);
+            // r.setBold(true);
+            r.setFontFamily(fontFamily);
+            r.setFontSize(fontSize);
         }
 
-        // 遍历 JSON 数组
-        for (int i = 0; i < dataByColumns.size(); i++) {
-            JSONArray innerArray = dataByColumns.getJSONArray(i);
+        if (null == tableData || tableData.size() == 0) {
+            return 1;
+        }
+        // 遍历 JSON 数组，写表体
+        for (int i = 0; i < tableData.size(); i++) {
+            JSONArray innerArray = tableData.getJSONArray(i);
             currRow = newTable.getRow(i + 1);
             if (null == currRow) {
                 currRow = newTable.createRow();
             }
             for (int j = 0; j < innerArray.size(); j++) {
                 currRow.getCell(j).setText(innerArray.getString(j));
+                XWPFRun r = currRow.getCell(j).getParagraphs().get(0).getRuns().get(0);
+                r.setFontFamily(fontFamily);
+                r.setFontSize(fontSize);
             }
         }
 
-        JSONArray footer = inputObj.getJSONObject("input_des").getJSONArray("footer");
+        // 写表脚
+        JSONArray footer = inputObj.getJSONObject("input_des").getJSONArray("rows");
+        if (null == footer || footer.size() == 0){
+            return 1;
+        }
         currRow = newTable.createRow();
         int mergedSize = 0;
         for (int i = 0; i < footer.size(); i++) {
             JSONObject footerCell = footer.getJSONObject(i);
+            int currCellIndex = i + mergedSize;
+            XWPFTableCell currCell = currRow.getCell(currCellIndex);
             switch (footerCell.getString("type")) {
                 case "const":
-                    currRow.getCell(i + mergedSize).setText(footerCell.getString("content"));
+                    currCell.setText(footerCell.getString("content"));
                     int colspan = footerCell.getIntValue("colspan");
-                    if (colspan > 0) {
-                        currRow.getCell(i).getCTTc().addNewTcPr().addNewHMerge().setVal(STMerge.RESTART);
-                        currRow.getCell(i + colspan - 1).getCTTc().addNewTcPr().addNewHMerge().setVal(STMerge.CONTINUE);
+                    if (colspan > 1) {
+                        currRow.getCell(currCellIndex).getCTTc().addNewTcPr().addNewHMerge().setVal(STMerge.RESTART);
+                        currRow.getCell(currCellIndex + colspan - 1).getCTTc().addNewTcPr().addNewHMerge()
+                                .setVal(STMerge.CONTINUE);
                         mergedSize += colspan - 1;
                     }
                     break;
                 case "sum":
-                    double sum = 0;
-                    for (int j = 0; j < dataByColumns.size(); j++) {
-                        sum += dataByColumns.getJSONArray(j).getDouble(i + mergedSize);
+                    try{
+                        double sum = 0;
+                        for (int j = 0; j < tableData.size(); j++) {
+                            sum += Double.parseDouble(tableData.getJSONArray(j).getString(i + mergedSize));
+                        }
+                        if (sum == (long) sum) {
+                            //如果结果是整数则部显示小数点
+                            currCell.setText(String.format("%d", (long) sum));
+                        } else {
+                            currCell.setText(String.format("%s", sum));
+                        }
+                    }catch(Exception e){
+                        currCell.setText("#N/A");
                     }
-                    if (sum == (long) sum) {
-                        currRow.getCell(i + mergedSize).setText(String.format("%d", (long) sum));
-                    } else {
-                        currRow.getCell(i + mergedSize).setText(String.format("%s", sum));
-                    }
+                    break;
                 default:
+                    currCell.setText(" ");
                     break;
             }
+
+            XWPFRun r = currCell.getParagraphs().get(0).getRuns().get(0);
+            r.setFontFamily(fontFamily);
+            r.setFontSize(fontSize);
         }
         return 1;
     }
 
     /**
-     * 向模板中填充数据
-     * @param saveFile
-     * @throws IOException
+     * 设置table种的单元格内容，并保留原样式
+     * 
+     * @param cell
+     * @param text
      */
-    public void writeTemplate(String saveFile) throws IOException {
+    private void _setCellText(XWPFTableCell cell, String text) {
+        // 保留第一个paragraph第一个run以保持模板样式
+        while (cell.getParagraphs().size() > 1) {
+            cell.removeParagraph(1);
+        }
+        List<XWPFParagraph> paragraphs = cell.getParagraphs();
+        XWPFParagraph par = paragraphs.isEmpty() ? cell.addParagraph() : paragraphs.get(0);
+        while (par.getRuns().size() > 1) {
+            par.removeRun(1);
+        }
+        XWPFRun run = par.getRuns().size() == 0 ? par.createRun() : par.getRuns().get(0);
+        run.setText(text, 0);
+    }
+
+    /**
+     * 填充document对象中的占位信息
+     */
+    public void writeDocument() {
         for (int n = 0; n < document.getBodyElements().size(); n++) {
             IBodyElement element = document.getBodyElements().get(n);
             if (element instanceof XWPFParagraph) {
@@ -336,11 +678,21 @@ public class WordWriter extends WordParser {
                     for (XWPFTableCell cell : row.getTableCells()) {
                         String content = cell.getText();
                         content = _writeSimpleText(content);
-                        cell.setText(content);
+                        _setCellText(cell, content);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 向模板中填充数据，并写文件
+     * 
+     * @param saveFile
+     * @throws IOException
+     */
+    public void writeTemplate(String saveFile) throws IOException {
+        writeDocument();
         FileOutputStream out;
         out = new FileOutputStream(saveFile);
         document.write(out);

@@ -3,6 +3,7 @@ package com.laotie.app;
 import org.apache.poi.xwpf.usermodel.*;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 
 import java.io.FileInputStream;
@@ -16,30 +17,12 @@ public class WordParser {
     protected XWPFStyles style_sheet;
     protected Section nestedRoot;
 
-    public static void main(String[] args) {
-        String filePath = "docs/template.docx";
-        try {
-            WordParser wordParser = new WordParser(filePath);
-            Section root = wordParser.parseTemplate();
-
-            String jsonResult = root.toNoneEmpty().toJson();
-            System.out.println(jsonResult);
-            // System.out.println(JSON.toJSONString(root.fetchAllInputAttr()));
-
-            // Section rootBack = Section.fromJson(jsonResult);
-            // System.out.println(rootBack);
-        } catch (Exception e) {
-
-        }
-    }
-
     public WordParser(String filePath) throws IOException {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             this.document = new XWPFDocument(fis);
             // 样式表
             this.style_sheet = document.getStyles();
             this.nestedRoot = new Section("root", "root");
-            fis.close();
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -54,7 +37,8 @@ public class WordParser {
      */
     public Section parseTemplate() {
         Stack<Section> stack = new Stack<>();
-        stack.push(nestedRoot);
+        this.nestedRoot = new Section("root", "root");
+        stack.push(this.nestedRoot);
 
         for (IBodyElement element : document.getBodyElements()) {
             if (element instanceof XWPFParagraph) {
@@ -112,9 +96,11 @@ public class WordParser {
             String parentPrefix = stack.peek().getPrefix();
             List<Section> brothers = stack.peek().getChildren();
             if (parentPrefix.length() > 0) {
-                paraSection.setPrefix(parentPrefix + "." + brothers.size());
+                paraSection.setPrefix(parentPrefix + "."
+                        + String.valueOf( brothers.stream().filter(section -> "title".equals(section.getType())).count()));
             } else {
-                paraSection.setPrefix(String.valueOf(brothers.size()));
+                paraSection.setPrefix(
+                        String.valueOf(brothers.stream().filter(section -> "title".equals(section.getType())).count()));
             }
             stack.push(paraSection);
         } else {
@@ -146,16 +132,20 @@ public class WordParser {
      */
     private static List<Section> parseInput(String content) {
         List<Section> result = new ArrayList<>();
+        
+        try{
+            for (String json : extractJson(content)) {
+                JSONObject jsonObj = JSON.parseObject(json);
+                if (null == jsonObj.get("var_name")) {
+                    continue;
+                }
 
-        for (String json : extractJson(content)) {
-            JSONObject jsonObj = JSON.parseObject(json);
-            if (null == jsonObj.get("var_name")) {
-                continue;
+                Section inputSection = new Section("input", (String) jsonObj.get("name"));
+                inputSection.setInputAttr(jsonObj);
+                result.add(inputSection);
             }
-
-            Section inputSection = new Section("input", (String) jsonObj.get("name"));
-            inputSection.setInputAttr(jsonObj);
-            result.add(inputSection);
+        } catch (JSONException e){
+            // ignore exceptions
         }
 
         return result;

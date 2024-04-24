@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.laotie.app</groupId>
+  <groupId>io.github.yszc</groupId>
   <artifactId>wordparser</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
 
   <name>wordparser</name>
   <description>word parser</description>
@@ -32,12 +31,24 @@
     </developer>
   </developers>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+
+  </distributionManagement>
+
 
   <scm>
-    <connection>https://gitee.com/wangfugui-ma/aliyun-oss-spring-boot-starter.git</connection>
-    <developerConnection>scm:git:ssh://git@gitee.com:wangfugui-ma/aliyun-oss-spring-boot-starter.git
+    <connection>https://github.com/yszc/office_processor.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:yszc/office_processor.git
     </developerConnection>
-    <url>https://gitee.com/wangfugui-ma/aliyun-oss-spring-boot-starter</url>
+    <url>https://github.com/yszc/office_processor</url>
   </scm>
 
   <properties>
@@ -65,7 +76,11 @@
       <artifactId>jsoup</artifactId>
       <version>1.16.1</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.17.1</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -103,48 +118,6 @@
     <pluginManagement>      <!-- lock down plugins versions to avoid using Maven defaults (may be moved to
       parent pom) -->
       <plugins>
-        <!-- clean lifecycle, see
-        https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.1.0</version>
-        </plugin>
-        <!-- default lifecycle, jar packaging: see
-        https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>2.5.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
-        </plugin>
-        <!-- site lifecycle, see
-        https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-        <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.7.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>3.0.0</version>
-        </plugin>
         <!--   central发布插件    -->
         <plugin>
           <groupId>org.sonatype.central</groupId>
@@ -152,11 +125,11 @@
           <version>0.4.0</version>
           <extensions>true</extensions>
           <configuration>
-            <publishingServerId>gpg-laotie</publishingServerId>
+            <publishingServerId>central</publishingServerId>
             <tokenAuth>true</tokenAuth>
           </configuration>
         </plugin>
-        <!--   source源码插件 -->
+        <!--   source源码插件    -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
@@ -188,10 +161,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-gpg-plugin</artifactId>
           <version>1.5</version>
-          <configuration>
-            <executable>E:\dev\gpg2\GnuPG\bin\gpg.exe</executable>
-            <keyname>wangfugui-ma</keyname>
-          </configuration>
           <executions>
             <execution>
               <id>sign-artifacts</id>
@@ -199,8 +168,23 @@
               <goals>
                 <goal>sign</goal>
               </goals>
+              <configuration>
+                <keyname>DB6D9E7BF64D891F</keyname>
+                <passphraseServerId>DB6D9E7BF64D891F</passphraseServerId>
+              </configuration>
             </execution>
           </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>nexus-staging-maven-plugin</artifactId>
+          <version>1.6.7</version>
+          <extensions>true</extensions>
+          <configuration>
+             <serverId>ossrh</serverId>
+             <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+             <autoReleaseAfterClose>true</autoReleaseAfterClose>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

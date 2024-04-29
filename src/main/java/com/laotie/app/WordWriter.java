@@ -61,7 +61,7 @@ public class WordWriter extends WordParser {
             return offset;
         }
         Set<String> inputTypes = _getInputTypes(jsons);
-        if (inputTypes.contains("table") || inputTypes.contains("WYSIWYG")||inputTypes.contains("checkbox")) {
+        if (inputTypes.contains("table") || inputTypes.contains("WYSIWYG")||inputTypes.contains("checkbox") || inputTypes.contains("file_list")) {
             // whole replace
             int paraIndex = document.getBodyElements().indexOf(paragraph);
             int _offset = 0;
@@ -96,7 +96,13 @@ public class WordWriter extends WordParser {
                     document.removeBodyElement(paraIndex + _offset);
                     offset--;
                     break;
-                    
+                case "file_list":
+                    JSONArray fileList = formValues.getJSONArray(inputObj.getString("var_name"));
+                    _offset = _writeFileListCard(fileList, paragraph);
+                    offset += _offset;
+                    document.removeBodyElement(paraIndex + _offset);
+                    offset--;
+                    break;
             }
         } else {
             // inline replace
@@ -171,6 +177,7 @@ public class WordWriter extends WordParser {
                 switch (inputType) {
                     case "text":
                     case "radio":
+                    case "select":
                     case "date":
                         replacement = formValues.getString(varName);
                         if (!StringUtils.isEmpty(replacement)) {
@@ -210,7 +217,7 @@ public class WordWriter extends WordParser {
      * 替换简单文本
      *
      * @param content
-     * @param pure    是否过滤掉未填充的占位符
+     * @param pure    是否过滤掉未填充的占位符，false 会保留 json 在结果中
      * @return
      */
     private String _writeSimpleText(String content, Boolean pure) {
@@ -228,6 +235,7 @@ public class WordWriter extends WordParser {
             switch (inputType) {
                 case "text":
                 case "radio":
+                case "select":
                 case "date":
                     String textInput = formValues.getString(inputObj.getString("var_name"));
                     if (null != textInput) {
@@ -269,6 +277,58 @@ public class WordWriter extends WordParser {
             }
         }catch(Exception e){}
         return 13.0;
+    }
+
+    /**
+     * 设置段落字体
+     */
+    private void _setParagraphFontFamily(XWPFParagraph currPara, String fontFamily){
+        try{
+            List<XWPFRun> runs = currPara.getRuns();;
+            if (runs.size()==0){
+                runs.add(currPara.createRun());
+            }
+            for(int i=0; i<runs.size(); i++){
+                runs.get(i).setFontFamily(fontFamily);
+            }
+        }catch(Exception e){}
+    }
+
+    /**
+     * 设置段落字体大小
+     */
+    private void _setParagraphFontSize(XWPFParagraph currPara, Double fontSize){
+        try{
+            List<XWPFRun> runs = currPara.getRuns();;
+            if (runs.size()==0){
+                runs.add(currPara.createRun());
+            }
+            for(int i=0; i<runs.size(); i++){
+                runs.get(i).setFontSize(fontSize.intValue());
+            }
+        }catch(Exception e){}
+    }
+
+    /**
+     * 写段落中的文件列表（只显示文件名）
+     *
+     * @param filelist
+     * @param currPara
+     * @return
+     */
+    private int _writeFileListCard(JSONArray filelist, XWPFParagraph currPara) {
+        int offset = 0;
+        if(null == filelist){
+            return offset;
+        }
+        String toHtml = "";
+        for(int i = 0; i < filelist.size(); i++){
+            JSONObject fileObj = filelist.getJSONObject(i);
+            String fileName = fileObj.getString("name");
+            toHtml += "<p>"+ fileName + "</p>";
+        }
+        offset = _writeWYSIWYParagraphs(toHtml, currPara);
+        return offset;
     }
 
     /**
@@ -586,10 +646,13 @@ public class WordWriter extends WordParser {
                 currRow = newTable.createRow();
             }
             for (int j = 0; j < innerArray.size(); j++) {
-                currRow.getCell(j).setText(innerArray.getString(j));
-                XWPFRun r = currRow.getCell(j).getParagraphs().get(0).getRuns().get(0);
-                r.setFontFamily(fontFamily);
-                r.setFontSize(fontSize);
+                XWPFTableCell currCell = currRow.getCell(j);
+                _writeCell(header.getJSONObject(j), innerArray.getString(j), currCell);
+
+                for(XWPFParagraph p : currCell.getParagraphs()){
+                    _setParagraphFontFamily(p, fontFamily);
+                    _setParagraphFontSize(p, fontSize);
+                }
             }
         }
 
@@ -641,6 +704,34 @@ public class WordWriter extends WordParser {
             r.setFontSize(fontSize);
         }
         return 1;
+    }
+
+    /**
+     * 根据列的类型，写表格
+     * @param inputObj
+     * @param formValue
+     * @param cell
+     * @return
+     */
+    private int _writeCell(JSONObject inputObj,String formValue, XWPFTableCell cell){
+        int offset = 0;
+        if (null == inputObj || null == formValue || null == cell) {
+            return offset;
+        }
+        String inputType = inputObj.getString("input_type");
+        if (null == inputType) {
+            return offset;
+        }
+        switch (inputType) {
+            case "file_list":
+                XWPFParagraph paragraph = cell.getParagraphs().get(0);
+                offset = _writeFileListCard(JSONArray.parse(formValue), paragraph);
+                break;
+            default:
+                cell.setText(formValue);
+                break;
+        }
+        return offset;
     }
 
     /**

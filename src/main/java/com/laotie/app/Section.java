@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONWriter;
 
@@ -80,20 +81,22 @@ class Section {
 
     /**
      * 前端表单友好化适配，将不在title下的输入框放在附件封面
+     * 
      * @return
      */
-    public Section toFormFriendly(){
+    public Section toFormFriendly() {
         Section generalInfo = new Section("title", "附件封面");
         List<Integer> indexForDel = new ArrayList<>();
-        for (int i=0; i<this.children.size(); i++){
+        for (int i = 0; i < this.children.size(); i++) {
             Section child = this.children.get(i);
-            if ("input".equals(child.getType()) ){
+            if ("input".equals(child.getType())) {
                 generalInfo.children.add(child);
                 indexForDel.add(i);
             }
         }
         this.children.add(0, generalInfo);
-        this.children = this.children.stream().filter(section -> "title".equals(section.getType())).collect(Collectors.toList());
+        this.children = this.children.stream().filter(section -> "title".equals(section.getType()))
+                .collect(Collectors.toList());
         return this;
     }
 
@@ -103,7 +106,24 @@ class Section {
      * @return
      */
     public List<JSONObject> fetchAllInputAttr() {
-        return _fetchAllInputAttr(this);
+        return fetchAllInputAttr(true);
+    }
+
+    public List<JSONObject> fetchAllInputAttr(Boolean withComplex) {
+        if (withComplex) {
+            return _fetchAllInputAttr(this);
+        } else {
+            List<JSONObject> allInputs = _fetchAllInputAttr(this);
+            List<JSONObject> complexInputs = allInputs.stream()
+                    .filter(input -> input.containsKey("input_type") && input.getString("input_type").equals("complex"))
+                    .map(input -> _complex2List(input))
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
+            allInputs.removeIf(input -> input.containsKey("input_type") && input.getString("input_type").equals("complex"));
+            allInputs.addAll(complexInputs);
+            return allInputs;
+
+        }
     }
 
     /**
@@ -114,14 +134,23 @@ class Section {
      */
     private static List<JSONObject> _fetchAllInputAttr(Section root) {
         List<JSONObject> result = new ArrayList<>();
-
         for (Section child : root.getChildren()) {
-            if (child.getType() == "title") {
+            if ("title".equals(child.getType())) {
                 List<JSONObject> childInput = _fetchAllInputAttr(child);
                 result.addAll(childInput);
-            } else if (child.getType() == "input" && null != child.getInputAttr()) {
+            } else if ("input".equals(child.getType()) && null != child.getInputAttr()) {
                 result.add(child.getInputAttr());
             }
+        }
+        return result;
+    }
+
+    private List<JSONObject> _complex2List(JSONObject complexObject) {
+        List<JSONObject> result = new ArrayList<>();
+        JSONArray rows = complexObject.getJSONArray("rows");
+        for (int i = 0; i < rows.size(); i++) {
+            JSONArray row = rows.getJSONArray(i);
+            result.addAll(row.toJavaList(JSONObject.class));
         }
         return result;
     }

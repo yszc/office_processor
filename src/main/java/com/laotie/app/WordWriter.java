@@ -47,6 +47,11 @@ public class WordWriter extends WordParser {
         this.formValues = inputContent;
     }
 
+    public WordWriter(InputStream fis, JSONObject inputContent) {
+        super(fis);
+        this.formValues = inputContent;
+    }
+
     /**
      * 写段落内容
      *
@@ -318,14 +323,16 @@ public class WordWriter extends WordParser {
      */
     private int _writeFileListCard(JSONArray filelist, XWPFParagraph currPara) {
         int offset = 0;
-        if(null == filelist){
-            return offset;
-        }
         String toHtml = "";
-        for(int i = 0; i < filelist.size(); i++){
-            JSONObject fileObj = filelist.getJSONObject(i);
-            String fileName = fileObj.getString("name");
-            toHtml += "<p>"+ fileName + "</p>";
+        if(null != filelist && filelist.size()>0){
+            for(int i = 0; i < filelist.size(); i++){
+                JSONObject fileObj = filelist.getJSONObject(i);
+                String fileName = fileObj.getString("name");
+                toHtml += "<p>"+ fileName + "</p>";
+            }
+        }
+        if (toHtml.length()==0){
+            toHtml = "<p>无</p>";
         }
         offset = _writeWYSIWYParagraphs(toHtml, currPara);
         return offset;
@@ -345,7 +352,7 @@ public class WordWriter extends WordParser {
         Document dom = Jsoup.parse(HtmlContent);
         // 遍历所有子元素
         int offset = 0;
-        List<Element> tags = dom.select("p,img");
+        List<Element> tags = dom.selectXpath("//body/*");
         // 因为获得的 cursor 在段落前面的位置，并且没有找到获得段落后面的方法，因此倒序插入就是顺序
         Collections.reverse(tags);
         String fontFamily = _getFontFamily(currPara);

@@ -8,6 +8,7 @@ import com.alibaba.fastjson2.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -19,14 +20,25 @@ public class WordParser {
 
     public WordParser(String filePath) throws IOException {
         try (FileInputStream fis = new FileInputStream(filePath)) {
-            this.document = new XWPFDocument(fis);
-            // 样式表
-            this.style_sheet = document.getStyles();
-            this.nestedRoot = new Section("root", "root");
+            this.initWordParser(fis);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    public WordParser(InputStream fis){
+        try {
+            this.initWordParser(fis);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void initWordParser(InputStream fis) throws IOException {
+        this.document = new XWPFDocument(fis);
+        // 样式表
+        this.style_sheet = document.getStyles();
+        this.nestedRoot = new Section("root", "root");
     }
 
     /**

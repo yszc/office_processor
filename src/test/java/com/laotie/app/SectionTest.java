@@ -25,14 +25,19 @@ class SectionTest {
         }
         return fileContent.toString().trim(); // Remove trailing newline
     }
+    
+    /**
+     * 降维
+     * @throws IOException
+     */
     @Test
     void test1D() throws IOException {
-        String formJson = readFileAsString("docs/constant.json");
+        String formJson = readFileAsString("docs/formDefine.json");
         Section root = Section.fromJson(formJson);
         List<JSONObject> formList = root.fetchAllInputAttr(false);
         // filter the item which has no attribute var_name
         formList = formList.stream()
-        .filter(item -> !(item.containsKey("var_name") && !item.getString("var_name").isEmpty()) )
+        // .filter(item -> !item.containsKey("position_var"))
         .collect(Collectors.toList());
         System.out.println(formList);
     }

@@ -125,11 +125,19 @@ class Section {
                     .map(input -> _complex2List(input))
                     .flatMap(List::stream)
                     .collect(Collectors.toList());
-            allInputs.removeIf(input -> input.containsKey("input_type") && input.getString("input_type").equals("complex"));
+            allInputs.removeIf(
+                    input -> input.containsKey("input_type") && input.getString("input_type").equals("complex"));
             allInputs.addAll(complexInputs);
             return allInputs;
 
         }
+    }
+
+    public String getInputName() {
+        if (!this.type.equals("input") || this.getInputAttr() == null) {
+            return null;
+        }
+        return !this.getName().isEmpty() ? this.getName() : this.getInputAttr().getString("name");
     }
 
     /**
@@ -142,36 +150,24 @@ class Section {
         List<JSONObject> result = new ArrayList<>();
         Deque<Section> stack = new ArrayDeque<>();
         // JSONObject postion = new JSONObject();
-        
+
         stack.push(root);
-        
+
         while (!stack.isEmpty()) {
             Section current = stack.pop();
             for (Section child : current.getChildren()) {
                 if ("title".equals(child.getType())) {
-                    if (current.getPositionTitle()!= null) {
-                        child.setPositionTitle(current.getPositionTitle());
-                    }else{
-                        child.setPositionTitle(child.getName());
-                    }
+                    child.setPositionTitle(
+                            current.getPositionTitle() != null ? current.getPositionTitle() : child.getName());
 
                     stack.push(child);
                 } else if ("input".equals(child.getType()) && child.getInputAttr() != null) {
-                    if (current.getPositionTitle()!= null) {
-                        child.setPositionTitle(current.getPositionTitle());
-                    }else{
-                        child.setPositionTitle(child.getName());
-                    }
-                    if (current.getPositionInputName()!= null) {
-                        child.setPositionInputName(current.getPositionInputName());
-                    } else {
-                        child.setPositionInputName(child.getName());
-                    }
-                    if (current.getPositionVar()!= null) {
-                        child.setPositionVar(current.getPositionVar());
-                    } else {
-                        child.setPositionVar(child.getInputAttr().getString("var_name"));
-                    }
+                    child.setPositionTitle(
+                            current.getPositionTitle() != null ? current.getPositionTitle() : child.getName());
+                    child.setPositionInputName(current.getPositionInputName() != null ? current.getPositionInputName()
+                            : child.getInputName());
+                    child.setPositionVar(current.getPositionVar() != null ? current.getPositionVar()
+                            : child.getInputAttr().getString("var_name"));
 
                     JSONObject inputAttr = child.getInputAttr();
                     inputAttr.put("position_title", child.getPositionTitle());
@@ -183,16 +179,15 @@ class Section {
         }
         return result;
     }
-    
 
     private List<JSONObject> _complex2List(JSONObject complexObject) {
         List<JSONObject> result = new ArrayList<>();
         JSONArray rows = complexObject.getJSONArray("rows");
         for (int i = 0; i < rows.size(); i++) {
             JSONArray row = rows.getJSONArray(i);
-            for (int j = 0; j<row.size(); j++) {
+            for (int j = 0; j < row.size(); j++) {
                 JSONObject item = row.getJSONObject(j);
-                if (item.containsKey("validation")){
+                if (item.containsKey("validation")) {
                     item.put("position_title", complexObject.getString("position_title"));
                     item.put("position_input_name", complexObject.getString("position_input_name"));
                     item.put("position_var", complexObject.getString("position_var"));

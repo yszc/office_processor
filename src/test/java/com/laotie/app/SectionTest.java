@@ -37,7 +37,7 @@ class SectionTest {
         List<JSONObject> formList = root.fetchAllInputAttr(false);
         // filter the item which has no attribute var_name
         formList = formList.stream()
-        // .filter(item -> !item.containsKey("position_var"))
+        .filter(item -> item.getString("position_title")==null || item.getString("position_title").isEmpty())
         .collect(Collectors.toList());
         System.out.println(formList);
     }

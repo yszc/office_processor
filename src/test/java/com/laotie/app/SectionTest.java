@@ -27,12 +27,12 @@ class SectionTest {
     }
     @Test
     void test1D() throws IOException {
-        String formJson = readFileAsString("docs/constant.json");
+        String formJson = readFileAsString("docs/tradingPlatform.json");
         Section root = Section.fromJson(formJson);
         List<JSONObject> formList = root.fetchAllInputAttr(false);
         // filter the item which has no attribute var_name
         formList = formList.stream()
-        .filter(item -> !(item.containsKey("var_name") && !item.getString("var_name").isEmpty()) )
+        // .filter(item -> !(item.containsKey("var_name") && !item.getString("var_name").isEmpty()) )
         .collect(Collectors.toList());
         System.out.println(formList);
     }

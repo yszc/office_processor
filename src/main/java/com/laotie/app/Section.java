@@ -126,7 +126,8 @@ public class Section {
                     .map(input -> _complex2List(input))
                     .flatMap(List::stream)
                     .collect(Collectors.toList());
-            allInputs.removeIf(input -> input.containsKey("input_type") && input.getString("input_type").equals("complex"));
+            allInputs.removeIf(
+                    input -> input.containsKey("input_type") && input.getString("input_type").equals("complex"));
             allInputs.addAll(complexInputs);
             return allInputs;
 
@@ -141,48 +142,41 @@ public class Section {
     }
 
     /**
-     * 非递归DFS的方式获得所有的输入模块
-     * 使用非递归是因为需要向上查找栈的信息，但是目前算法只依赖直接关联的上级节点，使用递归也可以。
+     * 递归DFS的方式获得所有的输入模块，同时传递定位信息
      * 
      * @param root
      * @return
      */
-    private static List<JSONObject> _fetchAllInputAttr(Section root) {
+    private static List<JSONObject> _fetchAllInputAttr(Section current) {
         List<JSONObject> result = new ArrayList<>();
-        Deque<Section> stack = new ArrayDeque<>();
-        // JSONObject postion = new JSONObject();
 
-        stack.push(root);
-
-        while (!stack.isEmpty()) {
-            Section current = stack.pop();
-            for (Section child : current.getChildren()) {
-                // 二级标题，仅当第一级标题非空的时候取
-                if ( current.getPositionTitle() != null ){
-                    child.setPositionTitleL2(
+        for (Section child : current.getChildren()) {
+            // 二级标题，仅当第一级标题非空的时候取
+            if (current.getPositionTitle() != null) {
+                child.setPositionTitleL2(
                         current.getPositionTitleL2() != null ? current.getPositionTitleL2() : child.getName());
-                }
-                // 下级继承上级，第一层title获取自己的标题
-                child.setPositionTitle(
-                        current.getPositionTitle() != null ? current.getPositionTitle() : child.getName());
-                if ("title".equals(child.getType())) {
-                    stack.push(child);
-                } else if ("input".equals(child.getType()) && child.getInputAttr() != null) {
-                    // 下级继承上级，第一层input则根据自己的属性获取
-                    child.setPositionInputName(current.getPositionInputName() != null ? current.getPositionInputName()
-                            : child.getInputName());
-                    child.setPositionVar(current.getPositionVar() != null ? current.getPositionVar()
-                            : child.getInputAttr().getString("var_name"));
-
-                    JSONObject inputAttr = child.getInputAttr();
-                    inputAttr.put("position_title", child.getPositionTitle());
-                    inputAttr.put("position_title_l2", child.getPositionTitleL2());
-                    inputAttr.put("position_input_name", child.getPositionInputName());
-                    inputAttr.put("position_var", child.getPositionVar());
-                    result.add(inputAttr);
-                }
             }
+            child.setPositionTitle(
+                    current.getPositionTitle() != null ? current.getPositionTitle() : child.getName());
+            
+            if ("title".equals(child.getType())) {
+                result.addAll(_fetchAllInputAttr(child));
+            } else if ("input".equals(child.getType()) && child.getInputAttr() != null) {
+                child.setPositionInputName(current.getPositionInputName() != null ? current.getPositionInputName()
+                        : child.getInputName());
+                child.setPositionVar(current.getPositionVar() != null ? current.getPositionVar()
+                        : child.getInputAttr().getString("var_name"));
+
+                JSONObject inputAttr = child.getInputAttr();
+                inputAttr.put("position_title", child.getPositionTitle());
+                inputAttr.put("position_title_l2", child.getPositionTitleL2());
+                inputAttr.put("position_input_name", child.getPositionInputName());
+                inputAttr.put("position_var", child.getPositionVar());
+                result.add(inputAttr);
+            }
+
         }
+
         return result;
     }
 
@@ -193,12 +187,12 @@ public class Section {
             JSONArray row = rows.getJSONArray(i);
             for (int j = 0; j < row.size(); j++) {
                 JSONObject item = row.getJSONObject(j);
-//                if (item.containsKey("validation")) {
-                    item.put("position_title", complexObject.getString("position_title"));
-                    item.put("position_title_l2", complexObject.getString("position_title_l2"));
-                    item.put("position_input_name", complexObject.getString("position_input_name"));
-                    item.put("position_var", complexObject.getString("position_var"));
-//                }
+                // if (item.containsKey("validation")) {
+                item.put("position_title", complexObject.getString("position_title"));
+                item.put("position_title_l2", complexObject.getString("position_title_l2"));
+                item.put("position_input_name", complexObject.getString("position_input_name"));
+                item.put("position_var", complexObject.getString("position_var"));
+                // }
                 result.add(item);
             }
             // result.addAll(row.toJavaList(JSONObject.class));
